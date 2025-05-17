@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qwixx Game</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Qwixx Digital Game</h1>
+        
+        <!-- Game Setup Section -->
+        <div id="gameSetup">
+            <h2>Game Setup</h2>
+            <div class="player-setup">
+                <label for="playerCount">Number of Players:</label>
+                <select id="playerCount">
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4" selected>4</option>
+                </select>
+                <div id="playerNames"></div>
+            </div>
+            <button id="startGame">Start Game</button>
+        </div>
+        
+        <!-- Game Board Section -->
+        <div id="gameBoard" class="hidden">
+            <!-- Dice Section -->
+            <div class="dice-area">
+                <h2>Dice</h2>
+                <div class="dice-container">
+                    <div class="white-dice">
+                        <div class="die white" id="whiteDie1">1</div>
+                        <div class="die white" id="whiteDie2">1</div>
+                    </div>
+                    <div class="colored-dice">
+                        <div class="die red" id="redDie">1</div>
+                        <div class="die yellow" id="yellowDie">1</div>
+                        <div class="die green" id="greenDie">1</div>
+                        <div class="die blue" id="blueDie">1</div>
+                    </div>
+                </div>
+                <button id="rollDice">Roll Dice</button>
+            </div>
+            
+            <!-- Scorecards Section -->
+            <div id="scorecards"></div>
+            
+            <!-- Game Controls -->
+            <div class="game-controls">
+                <div id="currentPlayer">Current Player: <span></span></div>
+                <button id="endTurn" disabled>End Turn</button>
+            </div>
+        </div>
+        
+        <!-- Game Over Screen -->
+        <div id="gameOver" class="hidden">
+            <h2>Game Over!</h2>
+            <div id="finalScores"></div>
+            <button id="newGame">New Game</button>
+        </div>
+    </div>
+    
+    <script src="scripts/dice.js"></script>
+    <script src="scripts/scorecard.js"></script>
+    <script src="scripts/game.js"></script>
+    <script src="scripts/app.js"></script>
+</body>
+</html>
