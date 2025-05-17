@@ -1,2 +1,2 @@
 # qwixx
-Testing out copilots capabilities 
+Testing out copilot capabilities 
