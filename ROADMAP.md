@@ -8,15 +8,15 @@ This document outlines the planned features and development phases for the Qwixx
 - [x] Create project repository
 - [x] Add README with game rules and project overview
 - [x] Create development roadmap
-- [ ] Choose technology stack (React, Vue, or vanilla JS)
-- [ ] Set up development environment
-- [ ] Configure build tools and bundler
-- [ ] Set up testing framework
+- [x] Choose technology stack (React with TypeScript)
+- [x] Set up development environment
+- [x] Configure build tools and bundler (Vite)
+- [x] Set up testing framework (Vitest)
 
 ### 1.2 Project Structure
-- [ ] Create basic project structure
+- [x] Create basic project structure
 - [ ] Set up routing (if needed)
-- [ ] Configure linting and code formatting
+- [x] Configure linting and code formatting (ESLint)
 - [ ] Add CI/CD pipeline
 
 ## Phase 2: Core Game Logic
@@ -161,7 +161,15 @@ This document outlines the planned features and development phases for the Qwixx
 
 ## Version History
 
-- **v0.1.0** (Current) - Initial project setup and planning
+- **v0.2.0** (Current) - Tech stack setup complete
+  - React 19 + TypeScript chosen as framework
+  - Vite 7 configured as build tool
+  - Tailwind CSS 4 for styling
+  - Vitest + React Testing Library for testing
+  - ESLint 9 for code quality
+  - Development environment fully functional
+
+- **v0.1.0** - Initial project setup and planning
   - Repository created
   - README and ROADMAP established
   - Game rules documented
