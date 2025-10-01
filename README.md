@@ -1,2 +1,3 @@
 # qwixx
-Testing out copilot capabilities 
+
+This repo is a hobby project to recreate the dice game called qwixx.
