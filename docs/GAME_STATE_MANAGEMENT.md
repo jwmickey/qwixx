@@ -26,8 +26,14 @@ The game state management is implemented using React Context API with `useReduce
 4. **Helpers** (`src/utils/gameHelpers.ts`)
    - Utility functions for game logic
    - Player creation, score calculation, validation rules
+   - Winner determination
 
-5. **Validation** (`src/utils/validation.ts`)
+5. **Dice Helpers** (`src/utils/diceHelpers.ts`)
+   - Dice rolling functionality
+   - Dice combination calculation
+   - Active player vs. other players logic
+
+6. **Validation** (`src/utils/validation.ts`)
    - Game state validation functions
    - Ensures data integrity
 
@@ -329,6 +335,79 @@ The system includes validation at multiple levels:
 1. **Action-level validation**: In the reducer for each action
 2. **State-level validation**: `validateGameState()` for complete state integrity
 3. **Player validation**: `validatePlayerCount()` and `validatePlayerNames()`
+
+## Dice System
+
+### Rolling Dice
+
+```typescript
+import { rollAllDice } from './utils'
+
+// Roll all six dice
+const diceState = rollAllDice()
+// Returns: { white1: 3, white2: 4, red: 5, yellow: 2, green: 6, blue: 1 }
+```
+
+### Active Player Combinations
+
+The active player can combine dice in multiple ways:
+
+```typescript
+import { getActivePlayerCombinations } from './utils'
+
+const dice = {
+  white1: 2,
+  white2: 3,
+  red: 4,
+  yellow: 5,
+  green: 6,
+  blue: 1,
+}
+
+const combinations = getActivePlayerCombinations(dice, [])
+// Returns:
+// [
+//   { color: null, sum: 5 },        // white1 + white2
+//   { color: 'red', sum: 6 },       // white1 + red
+//   { color: 'red', sum: 7 },       // white2 + red
+//   { color: 'yellow', sum: 7 },    // white1 + yellow
+//   { color: 'yellow', sum: 8 },    // white2 + yellow
+//   { color: 'green', sum: 8 },     // white1 + green
+//   { color: 'green', sum: 9 },     // white2 + green
+//   { color: 'blue', sum: 3 },      // white1 + blue
+//   { color: 'blue', sum: 4 },      // white2 + blue
+// ]
+```
+
+### Other Players Combinations
+
+Non-active players can only use the white dice:
+
+```typescript
+import { getOtherPlayerCombinations } from './utils'
+
+const combinations = getOtherPlayerCombinations(dice)
+// Returns: [{ color: null, sum: 5 }]  // Only white1 + white2
+```
+
+### Locked Row Handling
+
+When a row is locked, its colored die is removed from combinations:
+
+```typescript
+const combinations = getActivePlayerCombinations(dice, ['red', 'blue'])
+// Returns combinations without red or blue dice
+```
+
+## Winner Determination
+
+```typescript
+import { determineWinner } from './utils'
+
+const winner = determineWinner(state.players)
+// Returns array of player(s) with highest score
+// Can return multiple players if there's a tie
+```
 
 ## Future Enhancements
 

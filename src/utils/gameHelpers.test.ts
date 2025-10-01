@@ -10,6 +10,7 @@ import {
   canMarkNumber,
   canLockRow,
   shouldGameEnd,
+  determineWinner,
 } from './gameHelpers'
 
 describe('gameHelpers', () => {
@@ -254,6 +255,74 @@ describe('gameHelpers', () => {
       const players = [createPlayer('Player 1'), createPlayer('Player 2')]
       players[0].penalties = 3
       expect(shouldGameEnd(0, players)).toBe(false)
+    })
+  })
+  
+  describe('determineWinner', () => {
+    it('should return empty array for no players', () => {
+      const winners = determineWinner([])
+      expect(winners).toHaveLength(0)
+    })
+    
+    it('should return single winner with highest score', () => {
+      const player1 = createPlayer('Alice')
+      player1.totalScore = 30
+      
+      const player2 = createPlayer('Bob')
+      player2.totalScore = 50
+      
+      const player3 = createPlayer('Charlie')
+      player3.totalScore = 20
+      
+      const winners = determineWinner([player1, player2, player3])
+      
+      expect(winners).toHaveLength(1)
+      expect(winners[0].name).toBe('Bob')
+      expect(winners[0].totalScore).toBe(50)
+    })
+    
+    it('should handle tie with multiple winners', () => {
+      const player1 = createPlayer('Alice')
+      player1.totalScore = 40
+      
+      const player2 = createPlayer('Bob')
+      player2.totalScore = 40
+      
+      const player3 = createPlayer('Charlie')
+      player3.totalScore = 20
+      
+      const winners = determineWinner([player1, player2, player3])
+      
+      expect(winners).toHaveLength(2)
+      expect(winners.map(p => p.name)).toContain('Alice')
+      expect(winners.map(p => p.name)).toContain('Bob')
+      expect(winners.every(p => p.totalScore === 40)).toBe(true)
+    })
+    
+    it('should handle all players tied', () => {
+      const player1 = createPlayer('Alice')
+      player1.totalScore = 25
+      
+      const player2 = createPlayer('Bob')
+      player2.totalScore = 25
+      
+      const winners = determineWinner([player1, player2])
+      
+      expect(winners).toHaveLength(2)
+    })
+    
+    it('should handle negative scores', () => {
+      const player1 = createPlayer('Alice')
+      player1.totalScore = -10
+      
+      const player2 = createPlayer('Bob')
+      player2.totalScore = -5
+      
+      const winners = determineWinner([player1, player2])
+      
+      expect(winners).toHaveLength(1)
+      expect(winners[0].name).toBe('Bob')
+      expect(winners[0].totalScore).toBe(-5)
     })
   })
 })
