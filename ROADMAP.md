@@ -67,8 +67,8 @@ This document outlines the planned features and development phases for the Qwixx
 
 ### 3.3 Visual Design
 - [x] Choose color scheme matching game aesthetics
-- [ ] Add dice roll animations
-- [ ] Create marking animations
+- [x] Add dice roll animations
+- [x] Create marking animations
 - [x] Design responsive layouts for different screen sizes
 - [x] Add visual feedback for valid/invalid actions
 

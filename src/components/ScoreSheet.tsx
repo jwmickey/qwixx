@@ -51,10 +51,10 @@ function ColorRow({
               key={num.number}
               onClick={() => canInteract && onMarkNumber(num.number)}
               disabled={!canInteract || row.locked}
-              className={`w-8 h-8 rounded border-2 text-sm font-semibold flex-shrink-0 transition-colors ${
+              className={`w-8 h-8 rounded border-2 text-sm font-semibold flex-shrink-0 transition-all duration-200 ${
                 num.marked
-                  ? `${colors.bg} ${colors.text} ${colors.border}`
-                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
+                  ? `${colors.bg} ${colors.text} ${colors.border} scale-105`
+                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100 hover:scale-105'
               } ${!canInteract || row.locked ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
             >
               {num.number}
@@ -125,9 +125,9 @@ export function ScoreSheet({ player, isActive, onMarkNumber, onAddPenalty, canIn
               {[0, 1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className={`w-6 h-6 rounded border-2 flex items-center justify-center text-sm ${
+                  className={`w-6 h-6 rounded border-2 flex items-center justify-center text-sm transition-all duration-300 ${
                     i < player.penalties
-                      ? 'bg-red-500 text-white border-red-700'
+                      ? 'bg-red-500 text-white border-red-700 scale-110'
                       : 'bg-white border-gray-300'
                   }`}
                 >
@@ -138,7 +138,7 @@ export function ScoreSheet({ player, isActive, onMarkNumber, onAddPenalty, canIn
             {canInteract && isActive && player.penalties < 4 && (
               <button
                 onClick={onAddPenalty}
-                className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-xs font-medium"
+                className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-xs font-medium transition-colors"
               >
                 + Penalty
               </button>

@@ -20,7 +20,7 @@ const DICE_COLORS: Record<string, string> = {
 function Die({ value, color, locked }: { value: number; color: string; locked?: boolean }) {
   return (
     <div
-      className={`w-16 h-16 rounded-lg border-2 flex items-center justify-center text-2xl font-bold ${
+      className={`w-16 h-16 rounded-lg border-2 flex items-center justify-center text-2xl font-bold transition-all duration-300 ${
         DICE_COLORS[color]
       } ${locked ? 'opacity-40' : ''}`}
     >
