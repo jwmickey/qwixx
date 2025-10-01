@@ -164,3 +164,22 @@ export function shouldGameEnd(lockedRowsCount: number, players: Player[]): boole
   // Check if any player has 4 penalties
   return players.some(player => player.penalties >= 4)
 }
+
+/**
+ * Determine the winner(s) of the game
+ * Returns array of winning player(s) sorted by score (highest first)
+ * Can return multiple players if there's a tie
+ */
+export function determineWinner(players: Player[]): Player[] {
+  if (players.length === 0) {
+    return []
+  }
+  
+  // Find the highest score
+  const highestScore = Math.max(...players.map(p => p.totalScore))
+  
+  // Return all players with the highest score (handles ties)
+  return players
+    .filter(p => p.totalScore === highestScore)
+    .sort((a, b) => b.totalScore - a.totalScore)
+}

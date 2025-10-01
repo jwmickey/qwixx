@@ -29,24 +29,24 @@ This document outlines the planned features and development phases for the Qwixx
 - [x] Add game state validation
 
 ### 2.2 Score Sheet Logic
-- [ ] Create score sheet data model
-- [ ] Implement number marking logic
-- [ ] Add marking validation (left-to-right, no going back)
-- [ ] Implement row locking mechanism
-- [ ] Create penalty mark system
-- [ ] Build score calculation algorithm
+- [x] Create score sheet data model
+- [x] Implement number marking logic
+- [x] Add marking validation (left-to-right, no going back)
+- [x] Implement row locking mechanism
+- [x] Create penalty mark system
+- [x] Build score calculation algorithm
 
 ### 2.3 Dice Rolling System
-- [ ] Implement dice roll randomization
-- [ ] Create dice combination calculator
-- [ ] Add valid move detection based on dice rolls
-- [ ] Implement colored die removal when row is locked
+- [x] Implement dice roll randomization
+- [x] Create dice combination calculator
+- [x] Add valid move detection based on dice rolls
+- [x] Implement colored die removal when row is locked
 
 ### 2.4 Game Flow
-- [ ] Implement turn sequence
-- [ ] Add active player vs. other players logic
-- [ ] Create game end detection
-- [ ] Implement winner determination
+- [x] Implement turn sequence
+- [x] Add active player vs. other players logic
+- [x] Create game end detection
+- [x] Implement winner determination
 
 ## Phase 3: User Interface
 

@@ -13,6 +13,7 @@ export {
   canMarkNumber,
   canLockRow,
   shouldGameEnd,
+  determineWinner,
 } from './gameHelpers'
 
 export {
@@ -20,3 +21,12 @@ export {
   validatePlayerNames,
   validateGameState,
 } from './validation'
+
+export {
+  rollDie,
+  rollAllDice,
+  getWhiteDiceSum,
+  getActivePlayerCombinations,
+  getOtherPlayerCombinations,
+  getPossibleSums,
+} from './diceHelpers'
