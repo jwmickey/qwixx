@@ -6,7 +6,7 @@ import { useGame } from '../state'
 import { DiceDisplay } from './DiceDisplay'
 import { ScoreSheet } from './ScoreSheet'
 import { GameControls } from './GameControls'
-import { rollAllDice } from '../utils/diceHelpers'
+import { rollAllDice, getActivePlayerCombinations, getOtherPlayerCombinations } from '../utils/diceHelpers'
 import type { RowColor } from '../types/game'
 
 export function GameBoard() {
@@ -40,6 +40,23 @@ export function GameBoard() {
   // Can pass after rolling dice
   const canPass = state.dice !== null
 
+  // Get valid numbers for each player based on dice
+  const getValidNumbers = (playerId: string): Set<number> => {
+    if (!state.dice) return new Set()
+
+    const isActivePlayer = playerId === currentPlayer.id
+    
+    if (isActivePlayer) {
+      // Active player can use white dice sum + any colored die combinations
+      const combinations = getActivePlayerCombinations(state.dice, state.lockedRows)
+      return new Set(combinations.map(c => c.sum))
+    } else {
+      // Other players can only use white dice sum
+      const combinations = getOtherPlayerCombinations(state.dice)
+      return new Set(combinations.map(c => c.sum))
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-100 p-4">
       <div className="max-w-4xl mx-auto space-y-4">
@@ -69,7 +86,8 @@ export function GameBoard() {
               isActive={player.id === currentPlayer.id}
               onMarkNumber={(color, number) => handleMarkNumber(player.id, color, number)}
               onAddPenalty={() => handleAddPenalty(player.id)}
-              canInteract={canPass}
+              canInteract={state.dice !== null}
+              validNumbers={getValidNumbers(player.id)}
             />
           ))}
         </div>

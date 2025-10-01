@@ -11,6 +11,7 @@ interface ScoreSheetProps {
   onMarkNumber: (color: RowColor, number: number) => void
   onAddPenalty: () => void
   canInteract: boolean
+  validNumbers: Set<number>
 }
 
 const ROW_COLORS: Record<RowColor, { bg: string; text: string; border: string }> = {
@@ -25,11 +26,13 @@ function ColorRow({
   row,
   onMarkNumber,
   canInteract,
+  validNumbers,
 }: {
   color: RowColor
   row: Player['scoreSheet'][RowColor]
   onMarkNumber: (number: number) => void
   canInteract: boolean
+  validNumbers: Set<number>
 }) {
   const colors = ROW_COLORS[color]
   const rowScore = calculateRowScore(row)
@@ -46,20 +49,27 @@ function ColorRow({
 
         {/* Numbers */}
         <div className="flex gap-1 flex-1 overflow-x-auto">
-          {row.numbers.map((num) => (
-            <button
-              key={num.number}
-              onClick={() => canInteract && onMarkNumber(num.number)}
-              disabled={!canInteract || row.locked}
-              className={`w-8 h-8 rounded border-2 text-sm font-semibold flex-shrink-0 transition-all duration-200 ${
-                num.marked
-                  ? `${colors.bg} ${colors.text} ${colors.border} scale-105`
-                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100 hover:scale-105'
-              } ${!canInteract || row.locked ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
-            >
-              {num.number}
-            </button>
-          ))}
+          {row.numbers.map((num) => {
+            const isValid = validNumbers.has(num.number)
+            const isClickable = canInteract && !row.locked && isValid
+            
+            return (
+              <button
+                key={num.number}
+                onClick={() => isClickable && onMarkNumber(num.number)}
+                disabled={!isClickable}
+                className={`w-8 h-8 rounded border-2 text-sm font-semibold flex-shrink-0 transition-all duration-200 ${
+                  num.marked
+                    ? `${colors.bg} ${colors.text} ${colors.border} scale-105`
+                    : isValid && canInteract && !row.locked
+                    ? 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100 hover:scale-105 cursor-pointer'
+                    : 'bg-white text-gray-400 border-gray-200 cursor-not-allowed opacity-60'
+                }`}
+              >
+                {num.number}
+              </button>
+            )
+          })}
         </div>
 
         {/* Lock indicator */}
@@ -75,7 +85,7 @@ function ColorRow({
   )
 }
 
-export function ScoreSheet({ player, isActive, onMarkNumber, onAddPenalty, canInteract }: ScoreSheetProps) {
+export function ScoreSheet({ player, isActive, onMarkNumber, onAddPenalty, canInteract, validNumbers }: ScoreSheetProps) {
   return (
     <div className={`bg-white rounded-lg shadow p-4 ${isActive ? 'ring-2 ring-blue-500' : ''}`}>
       {/* Player name and score */}
@@ -95,25 +105,29 @@ export function ScoreSheet({ player, isActive, onMarkNumber, onAddPenalty, canIn
         color="red"
         row={player.scoreSheet.red}
         onMarkNumber={(num) => onMarkNumber('red', num)}
-        canInteract={canInteract && isActive}
+        canInteract={canInteract}
+        validNumbers={validNumbers}
       />
       <ColorRow
         color="yellow"
         row={player.scoreSheet.yellow}
         onMarkNumber={(num) => onMarkNumber('yellow', num)}
-        canInteract={canInteract && isActive}
+        canInteract={canInteract}
+        validNumbers={validNumbers}
       />
       <ColorRow
         color="green"
         row={player.scoreSheet.green}
         onMarkNumber={(num) => onMarkNumber('green', num)}
-        canInteract={canInteract && isActive}
+        canInteract={canInteract}
+        validNumbers={validNumbers}
       />
       <ColorRow
         color="blue"
         row={player.scoreSheet.blue}
         onMarkNumber={(num) => onMarkNumber('blue', num)}
-        canInteract={canInteract && isActive}
+        canInteract={canInteract}
+        validNumbers={validNumbers}
       />
 
       {/* Penalties */}
