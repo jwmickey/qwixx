@@ -22,11 +22,11 @@ This document outlines the planned features and development phases for the Qwixx
 ## Phase 2: Core Game Logic
 
 ### 2.1 Game State Management
-- [ ] Design game state data structure
-- [ ] Implement player management
-- [ ] Create turn management system
-- [ ] Implement game initialization
-- [ ] Add game state validation
+- [x] Design game state data structure
+- [x] Implement player management
+- [x] Create turn management system
+- [x] Implement game initialization
+- [x] Add game state validation
 
 ### 2.2 Score Sheet Logic
 - [ ] Create score sheet data model
