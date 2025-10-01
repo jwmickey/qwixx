@@ -99,11 +99,47 @@ This project aims to create a digital version of Qwixx that allows 2-5 players t
 
 ### Technology Stack
 
-*(To be determined during development)*
+- **Framework**: React 19 with TypeScript
+- **Build Tool**: Vite 7
+- **Styling**: Tailwind CSS 4
+- **Testing**: Vitest with React Testing Library
+- **Linting**: ESLint 9
 
 ## Getting Started
 
-*(Coming soon - development has not yet begun)*
+### Prerequisites
+
+- Node.js 18 or higher
+- npm 9 or higher
+
+### Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/jwmickey/qwixx.git
+cd qwixx
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Start the development server:
+```bash
+npm run dev
+```
+
+The application will be available at `http://localhost:5173/`
+
+### Available Scripts
+
+- `npm run dev` - Start the development server
+- `npm run build` - Build the project for production
+- `npm run preview` - Preview the production build
+- `npm run lint` - Run ESLint to check code quality
+- `npm test` - Run tests in watch mode
+- `npm run test:ui` - Run tests with Vitest UI
 
 ## Contributing
 
