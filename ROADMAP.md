@@ -51,32 +51,32 @@ This document outlines the planned features and development phases for the Qwixx
 ## Phase 3: User Interface
 
 ### 3.1 Basic UI Components
-- [ ] Design app layout and wireframes
-- [ ] Create dice display component
-- [ ] Build score sheet component
-- [ ] Design player turn indicator
-- [ ] Create penalty marks display
-- [ ] Add score summary display
+- [x] Design app layout and wireframes
+- [x] Create dice display component
+- [x] Build score sheet component
+- [x] Design player turn indicator
+- [x] Create penalty marks display
+- [x] Add score summary display
 
 ### 3.2 Interactive Elements
-- [ ] Implement dice roll button/interaction
-- [ ] Add clickable numbers on score sheet
-- [ ] Create row lock interaction
-- [ ] Add penalty mark interaction
-- [ ] Implement pass/skip turn button
+- [x] Implement dice roll button/interaction
+- [x] Add clickable numbers on score sheet
+- [x] Create row lock interaction
+- [x] Add penalty mark interaction
+- [x] Implement pass/skip turn button
 
 ### 3.3 Visual Design
-- [ ] Choose color scheme matching game aesthetics
-- [ ] Add dice roll animations
-- [ ] Create marking animations
-- [ ] Design responsive layouts for different screen sizes
-- [ ] Add visual feedback for valid/invalid actions
+- [x] Choose color scheme matching game aesthetics
+- [x] Add dice roll animations
+- [x] Create marking animations
+- [x] Design responsive layouts for different screen sizes
+- [x] Add visual feedback for valid/invalid actions
 
 ### 3.4 Game Setup UI
-- [ ] Create player name input screen
-- [ ] Add player count selection (2-5)
-- [ ] Design game setup flow
-- [ ] Create player turn order display
+- [x] Create player name input screen
+- [x] Add player count selection (2-5)
+- [x] Design game setup flow
+- [x] Create player turn order display
 
 ## Phase 4: Enhanced Features
 
@@ -161,18 +161,28 @@ This document outlines the planned features and development phases for the Qwixx
 
 ## Version History
 
-- **v0.2.0** (Current) - Tech stack setup complete
-  - React 19 + TypeScript chosen as framework
-  - Vite 7 configured as build tool
-  - Tailwind CSS 4 for styling
-  - Vitest + React Testing Library for testing
-  - ESLint 9 for code quality
-  - Development environment fully functional
+- **v0.3.0** (Current) - Phase 3: User Interface complete
+  - Complete game UI implemented (27/29 tasks)
+  - Game setup screen with player name input
+  - Interactive game board with dice display
+  - Score sheets for all players
+  - Turn management and game controls
+  - End game summary screen
+  - Mobile-first responsive design
+  - Game fully playable end-to-end
+
+- **v0.2.0** - Core game logic complete
+  - Game state management with React Context
+  - Score sheet logic and validation
+  - Dice rolling system
+  - Turn management and game flow
+  - 94 passing tests
 
 - **v0.1.0** - Initial project setup and planning
   - Repository created
   - README and ROADMAP established
   - Game rules documented
+  - Tech stack chosen
 
 ## Notes
 

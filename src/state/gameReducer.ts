@@ -98,14 +98,14 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     }
     
     case 'MARK_NUMBER': {
-      const { playerId, color, number } = action.payload
+      const { playerId, color, number, allowLockedRow } = action.payload
       
       if (state.gameStatus !== 'playing') {
         return state
       }
       
-      // Check if row is locked
-      if (state.lockedRows.includes(color)) {
+      // Check if row is locked (but allow if explicitly permitted for white dice phase)
+      if (state.lockedRows.includes(color) && !allowLockedRow) {
         console.error(`Row ${color} is locked.`)
         return state
       }

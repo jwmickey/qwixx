@@ -1,13 +1,36 @@
+import { GameProvider, useGame } from './state'
+import { GameSetup, GameBoard, GameSummary } from './components'
+import { determineWinner } from './utils/gameHelpers'
+
+function GameContainer() {
+  const { state, dispatch } = useGame()
+
+  const handleStartGame = (playerNames: string[]) => {
+    dispatch({ type: 'INITIALIZE_GAME', payload: { playerNames } })
+    dispatch({ type: 'START_GAME' })
+  }
+
+  const handleNewGame = () => {
+    dispatch({ type: 'RESET_GAME' })
+  }
+
+  if (state.gameStatus === 'setup') {
+    return <GameSetup onStartGame={handleStartGame} />
+  }
+
+  if (state.gameStatus === 'ended') {
+    const winners = determineWinner(state.players)
+    return <GameSummary players={state.players} winners={winners} onNewGame={handleNewGame} />
+  }
+
+  return <GameBoard />
+}
+
 function App() {
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">Qwixx</h1>
-        <p className="text-lg text-gray-600">
-          Digital recreation of the popular dice game
-        </p>
-      </div>
-    </div>
+    <GameProvider>
+      <GameContainer />
+    </GameProvider>
   )
 }
 
