@@ -437,17 +437,13 @@ describe('gameReducer', () => {
     })
   })
 
-  describe('UNDO', () => {
-    it('should undo actions within current turn', () => {
+  describe('UNMARK_NUMBER', () => {
+    it('should unmark a marked number', () => {
       let state = gameReducer(initialGameState, {
         type: 'INITIALIZE_GAME',
         payload: { playerNames: ['Alice', 'Bob'] },
       })
       state = gameReducer(state, { type: 'START_GAME' })
-      state = gameReducer(state, {
-        type: 'ROLL_DICE',
-        payload: { white1: 2, white2: 3, red: 4, yellow: 5, green: 1, blue: 6 },
-      })
       
       const playerId = state.players[0].id
       state = gameReducer(state, {
@@ -457,25 +453,41 @@ describe('gameReducer', () => {
       
       expect(state.players[0].scoreSheet.red.numbers[3].marked).toBe(true)
       
-      // Undo the mark (within current turn)
-      state = gameReducer(state, { type: 'UNDO' })
+      // Unmark the number
+      state = gameReducer(state, {
+        type: 'UNMARK_NUMBER',
+        payload: { playerId, color: 'red', number: 5 },
+      })
       
       expect(state.players[0].scoreSheet.red.numbers[3].marked).toBe(false)
-      expect(state.dice).not.toBeNull() // Dice should still be present
     })
 
-    it('should not undo actions from previous turns', () => {
+    it('should not unmark a number that is not marked', () => {
       let state = gameReducer(initialGameState, {
         type: 'INITIALIZE_GAME',
         payload: { playerNames: ['Alice', 'Bob'] },
       })
       state = gameReducer(state, { type: 'START_GAME' })
       
-      // First turn - roll dice and mark
+      const playerId = state.players[0].id
+      const beforeUnmark = state
+      
+      // Try to unmark a number that was never marked
       state = gameReducer(state, {
-        type: 'ROLL_DICE',
-        payload: { white1: 2, white2: 3, red: 4, yellow: 5, green: 1, blue: 6 },
+        type: 'UNMARK_NUMBER',
+        payload: { playerId, color: 'red', number: 5 },
       })
+      
+      // State should remain unchanged (except for history)
+      expect(state.players).toEqual(beforeUnmark.players)
+    })
+
+    it('should update total score after unmarking', () => {
+      let state = gameReducer(initialGameState, {
+        type: 'INITIALIZE_GAME',
+        payload: { playerNames: ['Alice', 'Bob'] },
+      })
+      state = gameReducer(state, { type: 'START_GAME' })
       
       const playerId = state.players[0].id
       state = gameReducer(state, {
@@ -483,109 +495,15 @@ describe('gameReducer', () => {
         payload: { playerId, color: 'red', number: 5 },
       })
       
-      expect(state.players[0].scoreSheet.red.numbers[3].marked).toBe(true)
+      expect(state.players[0].totalScore).toBe(1)
       
-      // End turn and start new turn
-      state = gameReducer(state, { type: 'NEXT_TURN' })
+      // Unmark the number
       state = gameReducer(state, {
-        type: 'ROLL_DICE',
-        payload: { white1: 1, white2: 2, red: 3, yellow: 4, green: 5, blue: 6 },
-      })
-      
-      // Try to undo - should not work because MARK_NUMBER was in previous turn
-      const stateBeforeUndo = state
-      state = gameReducer(state, { type: 'UNDO' })
-      
-      // State should remain unchanged
-      expect(state.players[0].scoreSheet.red.numbers[3].marked).toBe(true)
-      expect(state.dice).toEqual(stateBeforeUndo.dice)
-    })
-
-    it('should undo adding a penalty within current turn', () => {
-      let state = gameReducer(initialGameState, {
-        type: 'INITIALIZE_GAME',
-        payload: { playerNames: ['Alice', 'Bob'] },
-      })
-      state = gameReducer(state, { type: 'START_GAME' })
-      
-      // Roll dice to start turn
-      state = gameReducer(state, {
-        type: 'ROLL_DICE',
-        payload: { white1: 2, white2: 3, red: 4, yellow: 5, green: 1, blue: 6 },
-      })
-      
-      const playerId = state.players[0].id
-      state = gameReducer(state, {
-        type: 'ADD_PENALTY',
-        payload: { playerId },
-      })
-      
-      expect(state.players[0].penalties).toBe(1)
-      
-      // Undo the penalty (within current turn)
-      state = gameReducer(state, { type: 'UNDO' })
-      
-      expect(state.players[0].penalties).toBe(0)
-    })
-
-    it('should not undo if no dice have been rolled', () => {
-      let state = gameReducer(initialGameState, {
-        type: 'INITIALIZE_GAME',
-        payload: { playerNames: ['Alice', 'Bob'] },
-      })
-      state = gameReducer(state, { type: 'START_GAME' })
-      
-      const beforeUndo = state
-      
-      // Try to undo - should not change state (no ROLL_DICE yet)
-      state = gameReducer(state, { type: 'UNDO' })
-      
-      expect(state).toEqual(beforeUndo)
-    })
-
-    it('should undo multiple actions sequentially within current turn', () => {
-      let state = gameReducer(initialGameState, {
-        type: 'INITIALIZE_GAME',
-        payload: { playerNames: ['Alice', 'Bob'] },
-      })
-      state = gameReducer(state, { type: 'START_GAME' })
-      
-      // Roll dice to start turn
-      state = gameReducer(state, {
-        type: 'ROLL_DICE',
-        payload: { white1: 2, white2: 3, red: 4, yellow: 5, green: 1, blue: 6 },
-      })
-      
-      const playerId = state.players[0].id
-      
-      // Mark three numbers in current turn
-      state = gameReducer(state, {
-        type: 'MARK_NUMBER',
-        payload: { playerId, color: 'red', number: 3 },
-      })
-      state = gameReducer(state, {
-        type: 'MARK_NUMBER',
-        payload: { playerId, color: 'red', number: 4 },
-      })
-      state = gameReducer(state, {
-        type: 'MARK_NUMBER',
+        type: 'UNMARK_NUMBER',
         payload: { playerId, color: 'red', number: 5 },
       })
       
-      expect(state.players[0].scoreSheet.red.numbers[1].marked).toBe(true)
-      expect(state.players[0].scoreSheet.red.numbers[2].marked).toBe(true)
-      expect(state.players[0].scoreSheet.red.numbers[3].marked).toBe(true)
-      
-      // Undo last mark
-      state = gameReducer(state, { type: 'UNDO' })
-      expect(state.players[0].scoreSheet.red.numbers[3].marked).toBe(false)
-      
-      // Undo second mark
-      state = gameReducer(state, { type: 'UNDO' })
-      expect(state.players[0].scoreSheet.red.numbers[2].marked).toBe(false)
-      
-      // First mark should still be there
-      expect(state.players[0].scoreSheet.red.numbers[1].marked).toBe(true)
+      expect(state.players[0].totalScore).toBe(0)
     })
   })
 })

@@ -17,6 +17,8 @@ export function GameBoard() {
   const [whiteDiceMarked, setWhiteDiceMarked] = useState(false)
   const [coloredDiceMarked, setColoredDiceMarked] = useState(false)
   const [playersWhoMarkedWhite, setPlayersWhoMarkedWhite] = useState<Set<string>>(new Set())
+  // Track marks made in the current phase for toggle functionality
+  const [currentPhaseMarks, setCurrentPhaseMarks] = useState<Map<string, { color: RowColor; number: number }>>(new Map())
 
   const currentPlayer = state.players[state.currentPlayerIndex]
 
@@ -27,6 +29,7 @@ export function GameBoard() {
       setWhiteDiceMarked(false)
       setColoredDiceMarked(false)
       setPlayersWhoMarkedWhite(new Set())
+      setCurrentPhaseMarks(new Map())
     }
   }, [state.dice, state.currentPlayerIndex])
 
@@ -40,8 +43,39 @@ export function GameBoard() {
     const isActivePlayer = playerId === currentPlayer.id
     const whiteDiceSum = state.dice ? state.dice.white1 + state.dice.white2 : 0
     const isWhiteDiceMark = number === whiteDiceSum
+    
+    // Check if this number was marked in the current phase (can be toggled)
+    const markKey = `${playerId}-${color}-${number}`
+    const wasMarkedThisPhase = currentPhaseMarks.has(markKey)
+    
+    // If already marked in this phase, unmark it (toggle)
+    if (wasMarkedThisPhase) {
+      dispatch({
+        type: 'UNMARK_NUMBER',
+        payload: { playerId, color, number },
+      })
+      
+      // Update tracking
+      const newMarks = new Map(currentPhaseMarks)
+      newMarks.delete(markKey)
+      setCurrentPhaseMarks(newMarks)
+      
+      if (turnPhase === 'white-dice' || turnPhase === 'inactive-players') {
+        setPlayersWhoMarkedWhite(prev => {
+          const newSet = new Set(prev)
+          newSet.delete(playerId)
+          return newSet
+        })
+        if (isActivePlayer && turnPhase === 'white-dice') {
+          setWhiteDiceMarked(false)
+        }
+      } else if (turnPhase === 'colored-dice' && isActivePlayer) {
+        setColoredDiceMarked(false)
+      }
+      return
+    }
 
-    // Validate marking rules
+    // Validate marking rules (same as before, but now marks can be toggled)
     if (turnPhase === 'white-dice') {
       // Check if player already marked white dice
       if (playersWhoMarkedWhite.has(playerId)) {
@@ -51,12 +85,12 @@ export function GameBoard() {
       
       if (isWhiteDiceMark) {
         // Mark white dice - allow marking even if row is globally locked
-        // (multiple players can lock the same row during white dice phase)
         dispatch({
           type: 'MARK_NUMBER',
           payload: { playerId, color, number, allowLockedRow: true },
         })
         setPlayersWhoMarkedWhite(prev => new Set(prev).add(playerId))
+        setCurrentPhaseMarks(prev => new Map(prev).set(markKey, { color, number }))
         if (isActivePlayer) {
           setWhiteDiceMarked(true)
         }
@@ -70,6 +104,7 @@ export function GameBoard() {
         type: 'MARK_NUMBER',
         payload: { playerId, color, number },
       })
+      setCurrentPhaseMarks(prev => new Map(prev).set(markKey, { color, number }))
       setColoredDiceMarked(true)
     } else if (turnPhase === 'inactive-players' && !isActivePlayer) {
       // Inactive players can mark white dice - allow marking even if row is locked
@@ -79,6 +114,7 @@ export function GameBoard() {
           payload: { playerId, color, number, allowLockedRow: true },
         })
         setPlayersWhoMarkedWhite(prev => new Set(prev).add(playerId))
+        setCurrentPhaseMarks(prev => new Map(prev).set(markKey, { color, number }))
       }
     }
   }
@@ -90,6 +126,8 @@ export function GameBoard() {
   const handleFinishWhiteDicePhase = () => {
     if (turnPhase === 'white-dice') {
       setTurnPhase('colored-dice')
+      // Clear phase marks - white dice selections are now permanent
+      setCurrentPhaseMarks(new Map())
     }
   }
 
@@ -100,6 +138,8 @@ export function GameBoard() {
         handleAddPenalty(currentPlayer.id)
       }
       setTurnPhase('inactive-players')
+      // Clear phase marks - colored dice selection is now permanent
+      setCurrentPhaseMarks(new Map())
     }
   }
 
@@ -110,12 +150,7 @@ export function GameBoard() {
     setWhiteDiceMarked(false)
     setColoredDiceMarked(false)
     setPlayersWhoMarkedWhite(new Set())
-  }
-
-  const handleUndo = () => {
-    dispatch({ type: 'UNDO' })
-    // Don't reset turn phase or tracking state after undo
-    // The component should maintain its current phase
+    setCurrentPhaseMarks(new Map())
   }
 
   const handleRestart = () => {
@@ -125,54 +160,12 @@ export function GameBoard() {
       setWhiteDiceMarked(false)
       setColoredDiceMarked(false)
       setPlayersWhoMarkedWhite(new Set())
+      setCurrentPhaseMarks(new Map())
     }
   }
 
   // Can only roll if dice haven't been rolled yet this turn
   const canRoll = state.dice === null
-
-  // Check if undo is available (only for actions in current phase)
-  const canUndo = (() => {
-    // Must have rolled dice in current turn to have something to undo
-    if (!state.dice) return false
-    
-    const gameActions = state.history.filter(a => a.type !== 'UNDO')
-    if (gameActions.length <= 2) return false
-    
-    // Find last ROLL_DICE index manually (findLastIndex not available in older TS)
-    let lastRollDiceIndex = -1
-    for (let i = gameActions.length - 1; i >= 0; i--) {
-      if (gameActions[i].type === 'ROLL_DICE') {
-        lastRollDiceIndex = i
-        break
-      }
-    }
-    
-    if (lastRollDiceIndex === -1 || lastRollDiceIndex === gameActions.length - 1) return false
-    
-    // Get actions since the last ROLL_DICE
-    const actionsSinceDiceRoll = gameActions.slice(lastRollDiceIndex + 1)
-    
-    // In white-dice phase: can only undo MARK_NUMBER actions
-    // In colored-dice phase: can only undo MARK_NUMBER or ADD_PENALTY actions after white dice phase ended
-    // We determine phase end by checking if we've moved past white dice selection
-    if (turnPhase === 'white-dice') {
-      // Only allow undo if there are MARK_NUMBER actions in white dice phase
-      return actionsSinceDiceRoll.some(a => a.type === 'MARK_NUMBER' || a.type === 'ADD_PENALTY')
-    } else if (turnPhase === 'colored-dice') {
-      // In colored dice phase, only allow undoing colored dice actions
-      // White dice actions are already finished, so we can't undo them
-      // This is tricky - we need to track when white dice phase ended
-      // For now, don't allow undo if we've moved to colored dice phase
-      // to prevent the phase confusion issue
-      return false
-    } else if (turnPhase === 'inactive-players') {
-      // Allow undo in inactive players phase
-      return actionsSinceDiceRoll.some(a => a.type === 'MARK_NUMBER' || a.type === 'ADD_PENALTY')
-    }
-    
-    return false
-  })()
 
   // Determine button states based on turn phase
   let primaryButtonText = ''
@@ -261,19 +254,7 @@ export function GameBoard() {
           </div>
           
           {/* Secondary actions */}
-          <div className="flex items-center justify-between mb-3">
-            <button
-              onClick={handleUndo}
-              disabled={!canUndo}
-              className={`py-2 px-4 rounded text-sm font-medium ${
-                canUndo
-                  ? 'bg-yellow-600 text-white hover:bg-yellow-700'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              }`}
-              title="Undo last action in current turn"
-            >
-              ↶ Undo
-            </button>
+          <div className="flex justify-end mb-3">
             <button
               onClick={handleRestart}
               className="text-sm text-gray-500 hover:text-gray-700 underline"

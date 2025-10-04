@@ -75,11 +75,11 @@ export type GameAction =
   | { type: 'NEXT_TURN' }
   | { type: 'ROLL_DICE'; payload: DiceState }
   | { type: 'MARK_NUMBER'; payload: { playerId: string; color: RowColor; number: number; allowLockedRow?: boolean } }
+  | { type: 'UNMARK_NUMBER'; payload: { playerId: string; color: RowColor; number: number } }
   | { type: 'LOCK_ROW'; payload: { color: RowColor } }
   | { type: 'ADD_PENALTY'; payload: { playerId: string } }
   | { type: 'END_GAME' }
   | { type: 'RESET_GAME' }
-  | { type: 'UNDO' }
 
 /**
  * Represents the complete game state
