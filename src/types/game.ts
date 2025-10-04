@@ -74,7 +74,7 @@ export type GameAction =
   | { type: 'START_GAME' }
   | { type: 'NEXT_TURN' }
   | { type: 'ROLL_DICE'; payload: DiceState }
-  | { type: 'MARK_NUMBER'; payload: { playerId: string; color: RowColor; number: number } }
+  | { type: 'MARK_NUMBER'; payload: { playerId: string; color: RowColor; number: number; allowLockedRow?: boolean } }
   | { type: 'LOCK_ROW'; payload: { color: RowColor } }
   | { type: 'ADD_PENALTY'; payload: { playerId: string } }
   | { type: 'END_GAME' }

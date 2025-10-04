@@ -50,10 +50,11 @@ export function GameBoard() {
       }
       
       if (isWhiteDiceMark) {
-        // Mark white dice
+        // Mark white dice - allow marking even if row is globally locked
+        // (multiple players can lock the same row during white dice phase)
         dispatch({
           type: 'MARK_NUMBER',
-          payload: { playerId, color, number },
+          payload: { playerId, color, number, allowLockedRow: true },
         })
         setPlayersWhoMarkedWhite(prev => new Set(prev).add(playerId))
         if (isActivePlayer) {
@@ -71,11 +72,11 @@ export function GameBoard() {
       })
       setColoredDiceMarked(true)
     } else if (turnPhase === 'inactive-players' && !isActivePlayer) {
-      // Inactive players can mark white dice
+      // Inactive players can mark white dice - allow marking even if row is locked
       if (isWhiteDiceMark && !playersWhoMarkedWhite.has(playerId)) {
         dispatch({
           type: 'MARK_NUMBER',
-          payload: { playerId, color, number },
+          payload: { playerId, color, number, allowLockedRow: true },
         })
         setPlayersWhoMarkedWhite(prev => new Set(prev).add(playerId))
       }
