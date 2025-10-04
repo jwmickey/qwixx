@@ -112,6 +112,24 @@ export function GameBoard() {
     setPlayersWhoMarkedWhite(new Set())
   }
 
+  const handleUndo = () => {
+    dispatch({ type: 'UNDO' })
+    // Reset turn phase state after undo
+    setWhiteDiceMarked(false)
+    setColoredDiceMarked(false)
+    setPlayersWhoMarkedWhite(new Set())
+  }
+
+  const handleRestart = () => {
+    if (confirm('Are you sure you want to restart the game? All progress will be lost.')) {
+      dispatch({ type: 'RESET_GAME' })
+      setTurnPhase('rolling')
+      setWhiteDiceMarked(false)
+      setColoredDiceMarked(false)
+      setPlayersWhoMarkedWhite(new Set())
+    }
+  }
+
   // Can only roll if dice haven't been rolled yet this turn
   const canRoll = state.dice === null
 
@@ -200,6 +218,30 @@ export function GameBoard() {
               </button>
             )}
           </div>
+          
+          {/* Secondary actions */}
+          <div className="flex gap-2 mb-3">
+            <button
+              onClick={handleUndo}
+              disabled={state.history.length <= 2}
+              className={`flex-1 py-2 px-3 rounded text-sm font-medium ${
+                state.history.length > 2
+                  ? 'bg-yellow-600 text-white hover:bg-yellow-700'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
+              title="Undo last action"
+            >
+              ↶ Undo
+            </button>
+            <button
+              onClick={handleRestart}
+              className="flex-1 py-2 px-3 rounded text-sm font-medium bg-red-600 text-white hover:bg-red-700"
+              title="Restart game"
+            >
+              ↻ Restart
+            </button>
+          </div>
+
           <p className="text-sm text-gray-600">
             {turnPhase === 'rolling' && 'Roll the dice to see your options'}
             {turnPhase === 'white-dice' && 'All players: Mark the white dice sum (optional), then click Finish'}

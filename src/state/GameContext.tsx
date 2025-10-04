@@ -21,7 +21,12 @@ interface GameProviderProps {
  * Game state provider component
  */
 export function GameProvider({ children }: GameProviderProps) {
-  const [state, dispatch] = useReducer(gameReducer, initialGameState)
+  // Wrapper to make gameReducer compatible with useReducer
+  const reducerWrapper = (state: GameState, action: GameAction): GameState => {
+    return gameReducer(state, action)
+  }
+  
+  const [state, dispatch] = useReducer(reducerWrapper, initialGameState)
   
   return (
     <GameContext.Provider value={{ state, dispatch }}>
