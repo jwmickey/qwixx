@@ -49,18 +49,23 @@ function ColorRow({
 
         {/* Numbers */}
         <div className="flex gap-1 flex-1 overflow-x-auto">
-          {row.numbers.map((num) => {
+          {row.numbers.map((num, index) => {
             const isValid = validNumbers.has(num.number)
             const isClickable = canInteract && !row.locked && isValid
+            
+            // Check if this position is blocked because something to the right is marked
+            const isBlocked = !num.marked && row.numbers.slice(index + 1).some(n => n.marked)
             
             return (
               <button
                 key={num.number}
                 onClick={() => isClickable && onMarkNumber(num.number)}
                 disabled={!isClickable}
-                className={`w-8 h-8 rounded border-2 text-sm font-semibold flex-shrink-0 transition-all duration-200 ${
+                className={`w-8 h-8 rounded border-2 text-sm font-semibold flex-shrink-0 transition-all duration-200 relative ${
                   num.marked
                     ? `${colors.bg} ${colors.text} ${colors.border} scale-105`
+                    : isBlocked
+                    ? 'bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed line-through'
                     : isValid && canInteract && !row.locked
                     ? 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100 hover:scale-105 cursor-pointer'
                     : 'bg-white text-gray-400 border-gray-200 cursor-not-allowed opacity-60'

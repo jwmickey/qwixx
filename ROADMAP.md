@@ -81,14 +81,14 @@ This document outlines the planned features and development phases for the Qwixx
 ## Phase 4: Enhanced Features
 
 ### 4.1 Game Management
-- [ ] Add new game functionality
-- [ ] Implement game restart
-- [ ] Create game end summary screen
-- [ ] Add play again option
+- [x] Add new game functionality
+- [x] Implement game restart
+- [x] Create game end summary screen
+- [x] Add play again option
 
 ### 4.2 User Experience Improvements
-- [ ] Add undo/redo functionality
-- [ ] Implement confirmation dialogs for critical actions
+- [x] Add undo/redo functionality
+- [x] Implement confirmation dialogs for critical actions
 - [ ] Add help/rules modal
 - [ ] Create tutorial or first-time user guide
 - [ ] Add accessibility features (ARIA labels, keyboard navigation)

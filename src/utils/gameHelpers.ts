@@ -85,9 +85,9 @@ export function calculateTotalScore(player: Player): number {
 /**
  * Create a new player with initialized score sheet
  */
-export function createPlayer(name: string): Player {
+export function createPlayer(name: string, id?: string): Player {
   return {
-    id: generatePlayerId(),
+    id: id || generatePlayerId(),
     name,
     scoreSheet: createScoreSheet(),
     penalties: 0,

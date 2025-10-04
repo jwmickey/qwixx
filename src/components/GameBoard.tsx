@@ -112,8 +112,67 @@ export function GameBoard() {
     setPlayersWhoMarkedWhite(new Set())
   }
 
+  const handleUndo = () => {
+    dispatch({ type: 'UNDO' })
+    // Don't reset turn phase or tracking state after undo
+    // The component should maintain its current phase
+  }
+
+  const handleRestart = () => {
+    if (confirm('Are you sure you want to restart the game? All progress will be lost.')) {
+      dispatch({ type: 'RESET_GAME' })
+      setTurnPhase('rolling')
+      setWhiteDiceMarked(false)
+      setColoredDiceMarked(false)
+      setPlayersWhoMarkedWhite(new Set())
+    }
+  }
+
   // Can only roll if dice haven't been rolled yet this turn
   const canRoll = state.dice === null
+
+  // Check if undo is available (only for actions in current phase)
+  const canUndo = (() => {
+    // Must have rolled dice in current turn to have something to undo
+    if (!state.dice) return false
+    
+    const gameActions = state.history.filter(a => a.type !== 'UNDO')
+    if (gameActions.length <= 2) return false
+    
+    // Find last ROLL_DICE index manually (findLastIndex not available in older TS)
+    let lastRollDiceIndex = -1
+    for (let i = gameActions.length - 1; i >= 0; i--) {
+      if (gameActions[i].type === 'ROLL_DICE') {
+        lastRollDiceIndex = i
+        break
+      }
+    }
+    
+    if (lastRollDiceIndex === -1 || lastRollDiceIndex === gameActions.length - 1) return false
+    
+    // Get actions since the last ROLL_DICE
+    const actionsSinceDiceRoll = gameActions.slice(lastRollDiceIndex + 1)
+    
+    // In white-dice phase: can only undo MARK_NUMBER actions
+    // In colored-dice phase: can only undo MARK_NUMBER or ADD_PENALTY actions after white dice phase ended
+    // We determine phase end by checking if we've moved past white dice selection
+    if (turnPhase === 'white-dice') {
+      // Only allow undo if there are MARK_NUMBER actions in white dice phase
+      return actionsSinceDiceRoll.some(a => a.type === 'MARK_NUMBER' || a.type === 'ADD_PENALTY')
+    } else if (turnPhase === 'colored-dice') {
+      // In colored dice phase, only allow undoing colored dice actions
+      // White dice actions are already finished, so we can't undo them
+      // This is tricky - we need to track when white dice phase ended
+      // For now, don't allow undo if we've moved to colored dice phase
+      // to prevent the phase confusion issue
+      return false
+    } else if (turnPhase === 'inactive-players') {
+      // Allow undo in inactive players phase
+      return actionsSinceDiceRoll.some(a => a.type === 'MARK_NUMBER' || a.type === 'ADD_PENALTY')
+    }
+    
+    return false
+  })()
 
   // Determine button states based on turn phase
   let primaryButtonText = ''
@@ -200,6 +259,30 @@ export function GameBoard() {
               </button>
             )}
           </div>
+          
+          {/* Secondary actions */}
+          <div className="flex items-center justify-between mb-3">
+            <button
+              onClick={handleUndo}
+              disabled={!canUndo}
+              className={`py-2 px-4 rounded text-sm font-medium ${
+                canUndo
+                  ? 'bg-yellow-600 text-white hover:bg-yellow-700'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
+              title="Undo last action in current turn"
+            >
+              ↶ Undo
+            </button>
+            <button
+              onClick={handleRestart}
+              className="text-sm text-gray-500 hover:text-gray-700 underline"
+              title="Restart game"
+            >
+              Restart Game
+            </button>
+          </div>
+
           <p className="text-sm text-gray-600">
             {turnPhase === 'rolling' && 'Roll the dice to see your options'}
             {turnPhase === 'white-dice' && 'All players: Mark the white dice sum (optional), then click Finish'}

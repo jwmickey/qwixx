@@ -111,7 +111,12 @@ describe('Game State Integration', () => {
     })
     
     expect(state.lockedRows).toHaveLength(2)
-    expect(state.gameStatus).toBe('ended') // Game ended with 2 locked rows
+    // Game should still be playing until turn transition
+    expect(state.gameStatus).toBe('playing')
+    
+    // Game ends when turn is advanced
+    state = gameReducer(state, { type: 'NEXT_TURN' })
+    expect(state.gameStatus).toBe('ended')
   })
   
   it('should end game when player gets 4 penalties', () => {
@@ -133,6 +138,11 @@ describe('Game State Integration', () => {
     
     expect(state.players[0].penalties).toBe(4)
     expect(state.players[0].totalScore).toBe(-20)
+    // Game should still be playing until turn transition
+    expect(state.gameStatus).toBe('playing')
+    
+    // Game ends when turn is advanced
+    state = gameReducer(state, { type: 'NEXT_TURN' })
     expect(state.gameStatus).toBe('ended')
   })
   
