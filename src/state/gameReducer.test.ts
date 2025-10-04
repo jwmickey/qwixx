@@ -438,7 +438,7 @@ describe('gameReducer', () => {
   })
 
   describe('UNDO', () => {
-    it('should undo the last action', () => {
+    it('should undo actions within current turn', () => {
       let state = gameReducer(initialGameState, {
         type: 'INITIALIZE_GAME',
         payload: { playerNames: ['Alice', 'Bob'] },
@@ -449,23 +449,33 @@ describe('gameReducer', () => {
         payload: { white1: 2, white2: 3, red: 4, yellow: 5, green: 1, blue: 6 },
       })
       
-      expect(state.dice).not.toBeNull()
-      expect(state.history).toHaveLength(3)
+      const playerId = state.players[0].id
+      state = gameReducer(state, {
+        type: 'MARK_NUMBER',
+        payload: { playerId, color: 'red', number: 5 },
+      })
       
-      // Undo the dice roll
+      expect(state.players[0].scoreSheet.red.numbers[3].marked).toBe(true)
+      
+      // Undo the mark (within current turn)
       state = gameReducer(state, { type: 'UNDO' })
       
-      expect(state.dice).toBeNull()
-      expect(state.history).toHaveLength(3) // INITIALIZE, START, UNDO
-      expect(state.history[2].type).toBe('UNDO')
+      expect(state.players[0].scoreSheet.red.numbers[3].marked).toBe(false)
+      expect(state.dice).not.toBeNull() // Dice should still be present
     })
 
-    it('should undo marking a number', () => {
+    it('should not undo actions from previous turns', () => {
       let state = gameReducer(initialGameState, {
         type: 'INITIALIZE_GAME',
         payload: { playerNames: ['Alice', 'Bob'] },
       })
       state = gameReducer(state, { type: 'START_GAME' })
+      
+      // First turn - roll dice and mark
+      state = gameReducer(state, {
+        type: 'ROLL_DICE',
+        payload: { white1: 2, white2: 3, red: 4, yellow: 5, green: 1, blue: 6 },
+      })
       
       const playerId = state.players[0].id
       state = gameReducer(state, {
@@ -475,18 +485,34 @@ describe('gameReducer', () => {
       
       expect(state.players[0].scoreSheet.red.numbers[3].marked).toBe(true)
       
-      // Undo the mark
+      // End turn and start new turn
+      state = gameReducer(state, { type: 'NEXT_TURN' })
+      state = gameReducer(state, {
+        type: 'ROLL_DICE',
+        payload: { white1: 1, white2: 2, red: 3, yellow: 4, green: 5, blue: 6 },
+      })
+      
+      // Try to undo - should not work because MARK_NUMBER was in previous turn
+      const stateBeforeUndo = state
       state = gameReducer(state, { type: 'UNDO' })
       
-      expect(state.players[0].scoreSheet.red.numbers[3].marked).toBe(false)
+      // State should remain unchanged
+      expect(state.players[0].scoreSheet.red.numbers[3].marked).toBe(true)
+      expect(state.dice).toEqual(stateBeforeUndo.dice)
     })
 
-    it('should undo adding a penalty', () => {
+    it('should undo adding a penalty within current turn', () => {
       let state = gameReducer(initialGameState, {
         type: 'INITIALIZE_GAME',
         payload: { playerNames: ['Alice', 'Bob'] },
       })
       state = gameReducer(state, { type: 'START_GAME' })
+      
+      // Roll dice to start turn
+      state = gameReducer(state, {
+        type: 'ROLL_DICE',
+        payload: { white1: 2, white2: 3, red: 4, yellow: 5, green: 1, blue: 6 },
+      })
       
       const playerId = state.players[0].id
       state = gameReducer(state, {
@@ -496,13 +522,13 @@ describe('gameReducer', () => {
       
       expect(state.players[0].penalties).toBe(1)
       
-      // Undo the penalty
+      // Undo the penalty (within current turn)
       state = gameReducer(state, { type: 'UNDO' })
       
       expect(state.players[0].penalties).toBe(0)
     })
 
-    it('should not undo if history is too short', () => {
+    it('should not undo if no dice have been rolled', () => {
       let state = gameReducer(initialGameState, {
         type: 'INITIALIZE_GAME',
         payload: { playerNames: ['Alice', 'Bob'] },
@@ -511,22 +537,28 @@ describe('gameReducer', () => {
       
       const beforeUndo = state
       
-      // Try to undo - should not change state (only 2 actions: INITIALIZE and START)
+      // Try to undo - should not change state (no ROLL_DICE yet)
       state = gameReducer(state, { type: 'UNDO' })
       
       expect(state).toEqual(beforeUndo)
     })
 
-    it('should undo multiple actions sequentially', () => {
+    it('should undo multiple actions sequentially within current turn', () => {
       let state = gameReducer(initialGameState, {
         type: 'INITIALIZE_GAME',
         payload: { playerNames: ['Alice', 'Bob'] },
       })
       state = gameReducer(state, { type: 'START_GAME' })
       
+      // Roll dice to start turn
+      state = gameReducer(state, {
+        type: 'ROLL_DICE',
+        payload: { white1: 2, white2: 3, red: 4, yellow: 5, green: 1, blue: 6 },
+      })
+      
       const playerId = state.players[0].id
       
-      // Mark three numbers
+      // Mark three numbers in current turn
       state = gameReducer(state, {
         type: 'MARK_NUMBER',
         payload: { playerId, color: 'red', number: 3 },

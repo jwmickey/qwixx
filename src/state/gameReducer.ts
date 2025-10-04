@@ -265,8 +265,33 @@ export function gameReducer(state: GameState, action: GameAction, skipHistory = 
         return state
       }
       
-      // Get all game actions except the last one
+      // Find the index of the last ROLL_DICE action to identify current turn start
+      // (findLastIndex not available in older TS, so use manual loop)
+      let lastRollDiceIndex = -1
+      for (let i = gameActions.length - 1; i >= 0; i--) {
+        if (gameActions[i].type === 'ROLL_DICE') {
+          lastRollDiceIndex = i
+          break
+        }
+      }
+      
+      // If no ROLL_DICE found or it's the last action, cannot undo
+      if (lastRollDiceIndex === -1 || lastRollDiceIndex === gameActions.length - 1) {
+        return state
+      }
+      
+      // Only allow undoing actions that happened after the last ROLL_DICE (current turn)
+      // This prevents undoing actions from previous turns
       const actionsToReplay = gameActions.slice(0, -1)
+      
+      // Check if the action we're trying to undo is from the current turn
+      const actionToUndo = gameActions[gameActions.length - 1]
+      const isCurrentTurnAction = gameActions.indexOf(actionToUndo) > lastRollDiceIndex
+      
+      if (!isCurrentTurnAction) {
+        // Cannot undo actions from previous turns
+        return state
+      }
       
       // Replay all actions from initial state
       let replayedState = initialGameState

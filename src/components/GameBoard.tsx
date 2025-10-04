@@ -133,6 +133,28 @@ export function GameBoard() {
   // Can only roll if dice haven't been rolled yet this turn
   const canRoll = state.dice === null
 
+  // Check if undo is available (only for actions in current turn)
+  const canUndo = (() => {
+    // Must have rolled dice in current turn to have something to undo
+    if (!state.dice) return false
+    
+    const gameActions = state.history.filter(a => a.type !== 'UNDO')
+    if (gameActions.length <= 2) return false
+    
+    // Find last ROLL_DICE index manually (findLastIndex not available in older TS)
+    let lastRollDiceIndex = -1
+    for (let i = gameActions.length - 1; i >= 0; i--) {
+      if (gameActions[i].type === 'ROLL_DICE') {
+        lastRollDiceIndex = i
+        break
+      }
+    }
+    
+    if (lastRollDiceIndex === -1 || lastRollDiceIndex === gameActions.length - 1) return false
+    
+    return true
+  })()
+
   // Determine button states based on turn phase
   let primaryButtonText = ''
   let primaryButtonAction = () => {}
@@ -220,25 +242,25 @@ export function GameBoard() {
           </div>
           
           {/* Secondary actions */}
-          <div className="flex gap-2 mb-3">
+          <div className="flex items-center justify-between mb-3">
             <button
               onClick={handleUndo}
-              disabled={state.history.length <= 2}
-              className={`flex-1 py-2 px-3 rounded text-sm font-medium ${
-                state.history.length > 2
+              disabled={!canUndo}
+              className={`py-2 px-4 rounded text-sm font-medium ${
+                canUndo
                   ? 'bg-yellow-600 text-white hover:bg-yellow-700'
                   : 'bg-gray-300 text-gray-500 cursor-not-allowed'
               }`}
-              title="Undo last action"
+              title="Undo last action in current turn"
             >
               ↶ Undo
             </button>
             <button
               onClick={handleRestart}
-              className="flex-1 py-2 px-3 rounded text-sm font-medium bg-red-600 text-white hover:bg-red-700"
+              className="text-sm text-gray-500 hover:text-gray-700 underline"
               title="Restart game"
             >
-              ↻ Restart
+              Restart Game
             </button>
           </div>
 
