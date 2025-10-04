@@ -26,13 +26,15 @@ export const initialGameState: GameState = {
 /**
  * Game state reducer
  */
-export function gameReducer(state: GameState, action: GameAction): GameState {
-  // Add action to history for all actions
-  const newState = { ...state, history: [...state.history, action] }
+export function gameReducer(state: GameState, action: GameAction, skipHistory = false): GameState {
+  // Add action to history for all actions except during undo replay
+  const newState = skipHistory 
+    ? state 
+    : { ...state, history: [...state.history, action] }
   
   switch (action.type) {
     case 'INITIALIZE_GAME': {
-      const { playerNames } = action.payload
+      const { playerNames, playerIds } = action.payload
       
       // Validate player count (2-5 players)
       if (playerNames.length < 2 || playerNames.length > 5) {
@@ -46,8 +48,10 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         return state
       }
       
-      // Create players
-      const players = playerNames.map(name => createPlayer(name.trim()))
+      // Create players, using provided IDs if available (for undo replay)
+      const players = playerNames.map((name, index) => 
+        createPlayer(name.trim(), playerIds ? playerIds[index] : undefined)
+      )
       
       return {
         ...newState,
@@ -76,6 +80,11 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         return state
       }
       
+      // Check if game should end before moving to next player
+      const gameStatus = shouldGameEnd(state.lockedRows.length, state.players)
+        ? 'ended'
+        : 'playing'
+      
       // Move to next player
       const nextIndex = (state.currentPlayerIndex + 1) % state.players.length
       
@@ -83,6 +92,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         ...newState,
         currentPlayerIndex: nextIndex,
         dice: null, // Clear dice for next turn
+        gameStatus,
       }
     }
     
@@ -163,16 +173,11 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         }
       }
       
-      // Check if game should end
-      const gameStatus = shouldGameEnd(updatedLockedRows.length, updatedPlayers)
-        ? 'ended'
-        : 'playing'
-      
+      // Don't check game end here - wait until turn transition
       return {
         ...newState,
         players: updatedPlayers,
         lockedRows: updatedLockedRows,
-        gameStatus,
       }
     }
     
@@ -190,15 +195,10 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       
       const updatedLockedRows = [...state.lockedRows, color]
       
-      // Check if game should end
-      const gameStatus = shouldGameEnd(updatedLockedRows.length, state.players)
-        ? 'ended'
-        : 'playing'
-      
+      // Don't check game end here - wait until turn transition
       return {
         ...newState,
         lockedRows: updatedLockedRows,
-        gameStatus,
       }
     }
     
@@ -226,15 +226,10 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       const updatedPlayers = [...state.players]
       updatedPlayers[playerIndex] = updatedPlayer
       
-      // Check if game should end (player reached 4 penalties)
-      const gameStatus = shouldGameEnd(state.lockedRows.length, updatedPlayers)
-        ? 'ended'
-        : 'playing'
-      
+      // Don't check game end here - wait until turn transition
       return {
         ...newState,
         players: updatedPlayers,
-        gameStatus,
       }
     }
     
@@ -253,6 +248,47 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       return {
         ...initialGameState,
         history: [action],
+      }
+    }
+    
+    case 'UNDO': {
+      // Cannot undo if there's no history or only initialization actions
+      if (state.history.length <= 2) {
+        return state
+      }
+      
+      // Filter out UNDO actions from history to get actual game actions
+      const gameActions = state.history.filter(a => a.type !== 'UNDO')
+      
+      // Cannot undo if there are only initialization actions left
+      if (gameActions.length <= 2) {
+        return state
+      }
+      
+      // Get all game actions except the last one
+      const actionsToReplay = gameActions.slice(0, -1)
+      
+      // Replay all actions from initial state
+      let replayedState = initialGameState
+      for (const historyAction of actionsToReplay) {
+        // For INITIALIZE_GAME, add player IDs to preserve them
+        if (historyAction.type === 'INITIALIZE_GAME') {
+          const playerIds = state.players.map(p => p.id)
+          const modifiedAction = {
+            ...historyAction,
+            payload: { ...historyAction.payload, playerIds }
+          }
+          replayedState = gameReducer(replayedState, modifiedAction, true)
+        } else {
+          // Skip adding to history during replay
+          replayedState = gameReducer(replayedState, historyAction, true)
+        }
+      }
+      
+      // Add the UNDO action to history
+      return {
+        ...replayedState,
+        history: [...actionsToReplay, action],
       }
     }
     

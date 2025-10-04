@@ -263,6 +263,12 @@ describe('gameReducer', () => {
         payload: { playerId, color: 'yellow', number: 12 },
       })
       
+      // Game should still be playing until turn transition
+      expect(state.gameStatus).toBe('playing')
+      expect(state.lockedRows).toHaveLength(2)
+      
+      // Game ends when turn is advanced
+      state = gameReducer(state, { type: 'NEXT_TURN' })
       expect(state.gameStatus).toBe('ended')
     })
   })
@@ -305,6 +311,12 @@ describe('gameReducer', () => {
       expect(state.gameStatus).toBe('playing')
       
       state = gameReducer(state, { type: 'LOCK_ROW', payload: { color: 'yellow' } })
+      // Game should still be playing until turn transition
+      expect(state.gameStatus).toBe('playing')
+      expect(state.lockedRows).toHaveLength(2)
+      
+      // Game ends when turn is advanced
+      state = gameReducer(state, { type: 'NEXT_TURN' })
       expect(state.gameStatus).toBe('ended')
     })
   })
@@ -367,6 +379,12 @@ describe('gameReducer', () => {
       }
       
       state = gameReducer(state, { type: 'ADD_PENALTY', payload: { playerId } })
+      // Game should still be playing until turn transition
+      expect(state.gameStatus).toBe('playing')
+      expect(state.players[0].penalties).toBe(4)
+      
+      // Game ends when turn is advanced
+      state = gameReducer(state, { type: 'NEXT_TURN' })
       expect(state.gameStatus).toBe('ended')
     })
   })
@@ -416,6 +434,126 @@ describe('gameReducer', () => {
       state = gameReducer(state, { type: 'START_GAME' })
       expect(state.history).toHaveLength(2)
       expect(state.history[1].type).toBe('START_GAME')
+    })
+  })
+
+  describe('UNDO', () => {
+    it('should undo the last action', () => {
+      let state = gameReducer(initialGameState, {
+        type: 'INITIALIZE_GAME',
+        payload: { playerNames: ['Alice', 'Bob'] },
+      })
+      state = gameReducer(state, { type: 'START_GAME' })
+      state = gameReducer(state, {
+        type: 'ROLL_DICE',
+        payload: { white1: 2, white2: 3, red: 4, yellow: 5, green: 1, blue: 6 },
+      })
+      
+      expect(state.dice).not.toBeNull()
+      expect(state.history).toHaveLength(3)
+      
+      // Undo the dice roll
+      state = gameReducer(state, { type: 'UNDO' })
+      
+      expect(state.dice).toBeNull()
+      expect(state.history).toHaveLength(3) // INITIALIZE, START, UNDO
+      expect(state.history[2].type).toBe('UNDO')
+    })
+
+    it('should undo marking a number', () => {
+      let state = gameReducer(initialGameState, {
+        type: 'INITIALIZE_GAME',
+        payload: { playerNames: ['Alice', 'Bob'] },
+      })
+      state = gameReducer(state, { type: 'START_GAME' })
+      
+      const playerId = state.players[0].id
+      state = gameReducer(state, {
+        type: 'MARK_NUMBER',
+        payload: { playerId, color: 'red', number: 5 },
+      })
+      
+      expect(state.players[0].scoreSheet.red.numbers[3].marked).toBe(true)
+      
+      // Undo the mark
+      state = gameReducer(state, { type: 'UNDO' })
+      
+      expect(state.players[0].scoreSheet.red.numbers[3].marked).toBe(false)
+    })
+
+    it('should undo adding a penalty', () => {
+      let state = gameReducer(initialGameState, {
+        type: 'INITIALIZE_GAME',
+        payload: { playerNames: ['Alice', 'Bob'] },
+      })
+      state = gameReducer(state, { type: 'START_GAME' })
+      
+      const playerId = state.players[0].id
+      state = gameReducer(state, {
+        type: 'ADD_PENALTY',
+        payload: { playerId },
+      })
+      
+      expect(state.players[0].penalties).toBe(1)
+      
+      // Undo the penalty
+      state = gameReducer(state, { type: 'UNDO' })
+      
+      expect(state.players[0].penalties).toBe(0)
+    })
+
+    it('should not undo if history is too short', () => {
+      let state = gameReducer(initialGameState, {
+        type: 'INITIALIZE_GAME',
+        payload: { playerNames: ['Alice', 'Bob'] },
+      })
+      state = gameReducer(state, { type: 'START_GAME' })
+      
+      const beforeUndo = state
+      
+      // Try to undo - should not change state (only 2 actions: INITIALIZE and START)
+      state = gameReducer(state, { type: 'UNDO' })
+      
+      expect(state).toEqual(beforeUndo)
+    })
+
+    it('should undo multiple actions sequentially', () => {
+      let state = gameReducer(initialGameState, {
+        type: 'INITIALIZE_GAME',
+        payload: { playerNames: ['Alice', 'Bob'] },
+      })
+      state = gameReducer(state, { type: 'START_GAME' })
+      
+      const playerId = state.players[0].id
+      
+      // Mark three numbers
+      state = gameReducer(state, {
+        type: 'MARK_NUMBER',
+        payload: { playerId, color: 'red', number: 3 },
+      })
+      state = gameReducer(state, {
+        type: 'MARK_NUMBER',
+        payload: { playerId, color: 'red', number: 4 },
+      })
+      state = gameReducer(state, {
+        type: 'MARK_NUMBER',
+        payload: { playerId, color: 'red', number: 5 },
+      })
+      
+      expect(state.players[0].scoreSheet.red.numbers[1].marked).toBe(true)
+      expect(state.players[0].scoreSheet.red.numbers[2].marked).toBe(true)
+      expect(state.players[0].scoreSheet.red.numbers[3].marked).toBe(true)
+      
+      // Undo last mark
+      state = gameReducer(state, { type: 'UNDO' })
+      expect(state.players[0].scoreSheet.red.numbers[3].marked).toBe(false)
+      
+      // Undo second mark
+      state = gameReducer(state, { type: 'UNDO' })
+      expect(state.players[0].scoreSheet.red.numbers[2].marked).toBe(false)
+      
+      // First mark should still be there
+      expect(state.players[0].scoreSheet.red.numbers[1].marked).toBe(true)
     })
   })
 })
