@@ -114,10 +114,8 @@ export function GameBoard() {
 
   const handleUndo = () => {
     dispatch({ type: 'UNDO' })
-    // Reset turn phase state after undo
-    setWhiteDiceMarked(false)
-    setColoredDiceMarked(false)
-    setPlayersWhoMarkedWhite(new Set())
+    // Don't reset turn phase or tracking state after undo
+    // The component should maintain its current phase
   }
 
   const handleRestart = () => {
@@ -133,7 +131,7 @@ export function GameBoard() {
   // Can only roll if dice haven't been rolled yet this turn
   const canRoll = state.dice === null
 
-  // Check if undo is available (only for actions in current turn)
+  // Check if undo is available (only for actions in current phase)
   const canUndo = (() => {
     // Must have rolled dice in current turn to have something to undo
     if (!state.dice) return false
@@ -152,7 +150,28 @@ export function GameBoard() {
     
     if (lastRollDiceIndex === -1 || lastRollDiceIndex === gameActions.length - 1) return false
     
-    return true
+    // Get actions since the last ROLL_DICE
+    const actionsSinceDiceRoll = gameActions.slice(lastRollDiceIndex + 1)
+    
+    // In white-dice phase: can only undo MARK_NUMBER actions
+    // In colored-dice phase: can only undo MARK_NUMBER or ADD_PENALTY actions after white dice phase ended
+    // We determine phase end by checking if we've moved past white dice selection
+    if (turnPhase === 'white-dice') {
+      // Only allow undo if there are MARK_NUMBER actions in white dice phase
+      return actionsSinceDiceRoll.some(a => a.type === 'MARK_NUMBER' || a.type === 'ADD_PENALTY')
+    } else if (turnPhase === 'colored-dice') {
+      // In colored dice phase, only allow undoing colored dice actions
+      // White dice actions are already finished, so we can't undo them
+      // This is tricky - we need to track when white dice phase ended
+      // For now, don't allow undo if we've moved to colored dice phase
+      // to prevent the phase confusion issue
+      return false
+    } else if (turnPhase === 'inactive-players') {
+      // Allow undo in inactive players phase
+      return actionsSinceDiceRoll.some(a => a.type === 'MARK_NUMBER' || a.type === 'ADD_PENALTY')
+    }
+    
+    return false
   })()
 
   // Determine button states based on turn phase
