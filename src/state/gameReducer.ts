@@ -304,6 +304,14 @@ export function gameReducer(state: GameState, action: GameAction, skipHistory = 
         players: updatedPlayers,
       }
     }
+
+    case 'LOAD_GAME': {
+      // Load a saved game state
+      return {
+        ...action.payload.state,
+        history: skipHistory ? action.payload.state.history : [...state.history, action],
+      }
+    }
     
     default:
       return state

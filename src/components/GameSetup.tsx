@@ -53,16 +53,16 @@ export function GameSetup({ onStartGame }: GameSetupProps) {
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+      <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md" role="main">
         <h1 className="text-3xl font-bold text-gray-900 mb-2 text-center">Qwixx</h1>
         <p className="text-gray-600 text-center mb-6">Digital dice game</p>
 
         {/* Player count selection */}
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label id="player-count-label" className="block text-sm font-medium text-gray-700 mb-2">
             Number of Players
           </label>
-          <div className="flex gap-2">
+          <div className="flex gap-2" role="group" aria-labelledby="player-count-label">
             {[2, 3, 4, 5].map(count => (
               <button
                 key={count}
@@ -72,6 +72,8 @@ export function GameSetup({ onStartGame }: GameSetupProps) {
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                 }`}
+                aria-pressed={playerCount === count}
+                aria-label={`${count} players`}
               >
                 {count}
               </button>
@@ -81,10 +83,10 @@ export function GameSetup({ onStartGame }: GameSetupProps) {
 
         {/* Player name inputs */}
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label id="player-names-label" className="block text-sm font-medium text-gray-700 mb-2">
             Player Names
           </label>
-          <div className="space-y-2">
+          <div className="space-y-2" role="group" aria-labelledby="player-names-label">
             {playerNames.map((name, index) => (
               <input
                 key={index}
@@ -94,6 +96,8 @@ export function GameSetup({ onStartGame }: GameSetupProps) {
                 placeholder={`Player ${index + 1}`}
                 className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 maxLength={20}
+                aria-label={`Player ${index + 1} name`}
+                aria-required="true"
               />
             ))}
           </div>
@@ -101,7 +105,11 @@ export function GameSetup({ onStartGame }: GameSetupProps) {
 
         {/* Error message */}
         {error && (
-          <div className="mb-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded">
+          <div 
+            className="mb-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded" 
+            role="alert"
+            aria-live="polite"
+          >
             {error}
           </div>
         )}
@@ -110,6 +118,7 @@ export function GameSetup({ onStartGame }: GameSetupProps) {
         <button
           onClick={handleStartGame}
           className="w-full bg-green-600 text-white py-3 px-6 rounded font-semibold hover:bg-green-700 transition-colors"
+          aria-label="Start game with entered player names"
         >
           Start Game
         </button>

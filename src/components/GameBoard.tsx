@@ -5,6 +5,7 @@
 import { useState, useEffect } from 'react'
 import { useGame } from '../state'
 import { DiceDisplay } from './DiceDisplay'
+import { HelpModal } from './HelpModal'
 import { ScoreSheet } from './ScoreSheet'
 import { rollAllDice, getActivePlayerCombinations } from '../utils/diceHelpers'
 import type { RowColor } from '../types/game'
@@ -17,6 +18,7 @@ export function GameBoard() {
   const [whiteDiceMarked, setWhiteDiceMarked] = useState(false)
   const [coloredDiceMarked, setColoredDiceMarked] = useState(false)
   const [playersWhoMarkedWhite, setPlayersWhoMarkedWhite] = useState<Set<string>>(new Set())
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false)
   // Track marks made in the current phase for toggle functionality
   const [currentPhaseMarks, setCurrentPhaseMarks] = useState<Map<string, { color: RowColor; number: number }>>(new Map())
 
@@ -260,7 +262,15 @@ export function GameBoard() {
           </div>
           
           {/* Secondary actions */}
-          <div className="flex justify-end mb-3">
+          <div className="flex justify-between mb-3">
+            <button
+              onClick={() => setIsHelpModalOpen(true)}
+              className="text-sm text-blue-600 hover:text-blue-800 underline"
+              title="View game rules"
+              aria-label="Open help modal"
+            >
+              📖 Help
+            </button>
             <button
               onClick={handleRestart}
               className="text-sm text-gray-500 hover:text-gray-700 underline"
@@ -296,6 +306,9 @@ export function GameBoard() {
           ))}
         </div>
       </div>
+
+      {/* Help Modal */}
+      <HelpModal isOpen={isHelpModalOpen} onClose={() => setIsHelpModalOpen(false)} />
     </div>
   )
 }
