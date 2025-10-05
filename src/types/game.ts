@@ -80,6 +80,8 @@ export type GameAction =
   | { type: 'ADD_PENALTY'; payload: { playerId: string } }
   | { type: 'END_GAME' }
   | { type: 'RESET_GAME' }
+  | { type: 'LOAD_GAME'; payload: { state: GameState } }
+  | { type: 'UNDO' }
 
 /**
  * Represents the complete game state

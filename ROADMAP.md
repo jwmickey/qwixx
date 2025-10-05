@@ -89,15 +89,15 @@ This document outlines the planned features and development phases for the Qwixx
 ### 4.2 User Experience Improvements
 - [x] Add undo/redo functionality
 - [x] Implement confirmation dialogs for critical actions
-- [ ] Add help/rules modal
-- [ ] Create tutorial or first-time user guide
-- [ ] Add accessibility features (ARIA labels, keyboard navigation)
+- [x] Add help/rules modal
+- [x] Create tutorial or first-time user guide
+- [x] Add accessibility features (ARIA labels, keyboard navigation)
 
 ### 4.3 State Persistence
-- [ ] Implement local storage for game state
-- [ ] Add game resume functionality
-- [ ] Create save/load game feature
-- [ ] Add auto-save functionality
+- [x] Implement local storage for game state
+- [x] Add game resume functionality
+- [x] Create save/load game feature
+- [x] Add auto-save functionality
 
 ## Phase 5: Polish and Optimization
 

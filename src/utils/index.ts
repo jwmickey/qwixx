@@ -30,3 +30,12 @@ export {
   getOtherPlayerCombinations,
   getPossibleSums,
 } from './diceHelpers'
+
+export {
+  saveGameState,
+  loadGameState,
+  clearGameState,
+  hasSavedGame,
+  getAutoSaveEnabled,
+  setAutoSaveEnabled,
+} from './storage'

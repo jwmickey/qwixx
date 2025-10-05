@@ -2,9 +2,10 @@
  * React Context for game state management
  */
 
-import React, { createContext, useContext, useReducer, type ReactNode } from 'react'
+import React, { createContext, useContext, useReducer, useEffect, type ReactNode } from 'react'
 import type { GameState, GameAction } from '../types/game'
 import { gameReducer, initialGameState } from './gameReducer'
+import { saveGameState, getAutoSaveEnabled } from '../utils/storage'
 
 interface GameContextValue {
   state: GameState
@@ -27,6 +28,14 @@ export function GameProvider({ children }: GameProviderProps) {
   }
   
   const [state, dispatch] = useReducer(reducerWrapper, initialGameState)
+  
+  // Auto-save game state when it changes (if enabled)
+  useEffect(() => {
+    const autoSaveEnabled = getAutoSaveEnabled()
+    if (autoSaveEnabled && state.gameStatus === 'playing') {
+      saveGameState(state)
+    }
+  }, [state])
   
   return (
     <GameContext.Provider value={{ state, dispatch }}>

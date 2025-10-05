@@ -38,17 +38,20 @@ function ColorRow({
   const rowScore = calculateRowScore(row)
 
   return (
-    <div className="mb-2">
+    <div className="mb-2" role="group" aria-label={`${color} row`}>
       <div className="flex items-center gap-1">
         {/* Color indicator */}
-        <div className={`w-8 h-8 rounded ${colors.bg} ${colors.border} border-2 flex items-center justify-center`}>
+        <div 
+          className={`w-8 h-8 rounded ${colors.bg} ${colors.border} border-2 flex items-center justify-center`}
+          aria-hidden="true"
+        >
           <span className={`text-xs font-bold ${colors.text}`}>
             {color[0].toUpperCase()}
           </span>
         </div>
 
         {/* Numbers */}
-        <div className="flex gap-1 flex-1 overflow-x-auto">
+        <div className="flex gap-1 flex-1 overflow-x-auto" role="group" aria-label={`${color} row numbers`}>
           {row.numbers.map((num, index) => {
             const isValid = validNumbers.has(num.number)
             // Allow clicking if valid OR if already marked (for toggle/unmark)
@@ -71,6 +74,9 @@ function ColorRow({
                     ? 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100 hover:scale-105 cursor-pointer'
                     : 'bg-white text-gray-400 border-gray-200 cursor-not-allowed opacity-60'
                 }`}
+                aria-label={`${color} row, number ${num.number}${num.marked ? ', marked' : ''}${isBlocked ? ', blocked' : ''}`}
+                aria-pressed={num.marked}
+                tabIndex={isClickable ? 0 : -1}
               >
                 {num.number}
               </button>
@@ -79,9 +85,12 @@ function ColorRow({
         </div>
 
         {/* Lock indicator */}
-        <div className="w-8 h-8 flex items-center justify-center">
+        <div 
+          className="w-8 h-8 flex items-center justify-center"
+          aria-label={row.locked ? `${color} row locked` : `${color} row score: ${rowScore}`}
+        >
           {row.locked ? (
-            <span className="text-xl">🔒</span>
+            <span className="text-xl" aria-hidden="true">🔒</span>
           ) : (
             <span className="text-gray-400 text-xs">{rowScore}</span>
           )}
@@ -93,16 +102,20 @@ function ColorRow({
 
 export function ScoreSheet({ player, isActive, onMarkNumber, onAddPenalty, canInteract, validNumbers }: ScoreSheetProps) {
   return (
-    <div className={`bg-white rounded-lg shadow p-4 ${isActive ? 'ring-2 ring-blue-500' : ''}`}>
+    <div 
+      className={`bg-white rounded-lg shadow p-4 ${isActive ? 'ring-2 ring-blue-500' : ''}`}
+      role="region"
+      aria-label={`${player.name}'s score sheet${isActive ? ' (active player)' : ''}`}
+    >
       {/* Player name and score */}
       <div className="flex justify-between items-center mb-3">
         <h3 className="text-lg font-bold text-gray-900">
           {player.name}
-          {isActive && <span className="ml-2 text-sm text-blue-600">← Active</span>}
+          {isActive && <span className="ml-2 text-sm text-blue-600" aria-label="Active player">← Active</span>}
         </h3>
-        <div className="text-right">
-          <div className="text-2xl font-bold text-gray-900">{player.totalScore}</div>
-          <div className="text-xs text-gray-500">points</div>
+        <div className="text-right" aria-label={`Total score: ${player.totalScore} points`}>
+          <div className="text-2xl font-bold text-gray-900" aria-hidden="true">{player.totalScore}</div>
+          <div className="text-xs text-gray-500" aria-hidden="true">points</div>
         </div>
       </div>
 
