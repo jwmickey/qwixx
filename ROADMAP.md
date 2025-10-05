@@ -99,12 +99,6 @@ This document outlines the planned features and development phases for the Qwixx
 - [ ] Create save/load game feature
 - [ ] Add auto-save functionality
 
-### 4.4 Statistics and History
-- [ ] Track game history
-- [ ] Calculate player statistics
-- [ ] Create leaderboard/statistics view
-- [ ] Add game replay feature
-
 ## Phase 5: Polish and Optimization
 
 ### 5.1 Testing
@@ -126,34 +120,7 @@ This document outlines the planned features and development phases for the Qwixx
 - [ ] Add inline code comments
 - [ ] Document API/component interfaces
 
-### 5.4 Deployment
-- [ ] Choose hosting platform
-- [ ] Set up production environment
-- [ ] Configure domain (if applicable)
-- [ ] Deploy application
-- [ ] Set up monitoring and error tracking
-
-## Phase 6: Future Enhancements (Nice-to-Have)
-
-### 6.1 Advanced Features
-- [ ] Add sound effects and background music
-- [ ] Create different themes/skins
-- [ ] Add game variants or house rules options
-- [ ] Implement difficulty levels (if applicable)
-- [ ] Add achievements/badges system
-
-### 6.2 Social Features
-- [ ] Add share game results functionality
-- [ ] Create QR code for quick game joining (same device)
-- [ ] Export game statistics
-
-### 6.3 Accessibility
-- [ ] Add colorblind-friendly mode
-- [ ] Implement screen reader support
-- [ ] Add text size controls
-- [ ] Create high contrast mode
-
-### 6.4 Progressive Web App
+### 5.4 Progressive Web App
 - [ ] Add PWA manifest
 - [ ] Implement service worker for offline play
 - [ ] Add install prompt
