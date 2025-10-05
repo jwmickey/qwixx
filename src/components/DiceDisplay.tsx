@@ -20,7 +20,7 @@ const DICE_COLORS: Record<string, string> = {
 function Die({ value, color, locked }: { value: number; color: string; locked?: boolean }) {
   return (
     <div
-      className={`w-16 h-16 rounded-lg border-2 flex items-center justify-center text-2xl font-bold transition-all duration-300 ${
+      className={`w-12 h-12 rounded-lg border-2 flex items-center justify-center text-xl font-bold transition-all duration-300 ${
         DICE_COLORS[color]
       } ${locked ? 'opacity-40' : ''}`}
     >
@@ -39,20 +39,15 @@ export function DiceDisplay({ dice, lockedRows }: DiceDisplayProps) {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow p-4">
-      <h3 className="text-sm font-medium text-gray-700 mb-3">Dice</h3>
-      
-      {/* White dice */}
-      <div className="flex gap-2 mb-3">
+    <div className="bg-white rounded-lg shadow p-3">
+      {/* All dice on one line */}
+      <div className="flex gap-2 items-center flex-wrap">
         <Die value={dice.white1} color="white" />
         <Die value={dice.white2} color="white" />
-        <div className="flex items-center px-2 text-gray-600 font-semibold">
+        <div className="flex items-center px-1 text-gray-600 font-semibold text-sm">
           = {dice.white1 + dice.white2}
         </div>
-      </div>
-
-      {/* Colored dice */}
-      <div className="flex gap-2 flex-wrap">
+        <div className="w-px h-8 bg-gray-300 mx-1"></div>
         <Die value={dice.red} color="red" locked={lockedRows.includes('red')} />
         <Die value={dice.yellow} color="yellow" locked={lockedRows.includes('yellow')} />
         <Die value={dice.green} color="green" locked={lockedRows.includes('green')} />
