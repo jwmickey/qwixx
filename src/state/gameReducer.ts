@@ -26,13 +26,15 @@ export const initialGameState: GameState = {
 /**
  * Game state reducer
  */
-export function gameReducer(state: GameState, action: GameAction): GameState {
-  // Add action to history for all actions
-  const newState = { ...state, history: [...state.history, action] }
+export function gameReducer(state: GameState, action: GameAction, skipHistory = false): GameState {
+  // Add action to history for all actions except during undo replay
+  const newState = skipHistory 
+    ? state 
+    : { ...state, history: [...state.history, action] }
   
   switch (action.type) {
     case 'INITIALIZE_GAME': {
-      const { playerNames } = action.payload
+      const { playerNames, playerIds } = action.payload
       
       // Validate player count (2-5 players)
       if (playerNames.length < 2 || playerNames.length > 5) {
@@ -46,8 +48,10 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         return state
       }
       
-      // Create players
-      const players = playerNames.map(name => createPlayer(name.trim()))
+      // Create players, using provided IDs if available (for undo replay)
+      const players = playerNames.map((name, index) => 
+        createPlayer(name.trim(), playerIds ? playerIds[index] : undefined)
+      )
       
       return {
         ...newState,
@@ -76,6 +80,11 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         return state
       }
       
+      // Check if game should end before moving to next player
+      const gameStatus = shouldGameEnd(state.lockedRows.length, state.players)
+        ? 'ended'
+        : 'playing'
+      
       // Move to next player
       const nextIndex = (state.currentPlayerIndex + 1) % state.players.length
       
@@ -83,6 +92,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         ...newState,
         currentPlayerIndex: nextIndex,
         dice: null, // Clear dice for next turn
+        gameStatus,
       }
     }
     
@@ -163,16 +173,11 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         }
       }
       
-      // Check if game should end
-      const gameStatus = shouldGameEnd(updatedLockedRows.length, updatedPlayers)
-        ? 'ended'
-        : 'playing'
-      
+      // Don't check game end here - wait until turn transition
       return {
         ...newState,
         players: updatedPlayers,
         lockedRows: updatedLockedRows,
-        gameStatus,
       }
     }
     
@@ -190,15 +195,10 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       
       const updatedLockedRows = [...state.lockedRows, color]
       
-      // Check if game should end
-      const gameStatus = shouldGameEnd(updatedLockedRows.length, state.players)
-        ? 'ended'
-        : 'playing'
-      
+      // Don't check game end here - wait until turn transition
       return {
         ...newState,
         lockedRows: updatedLockedRows,
-        gameStatus,
       }
     }
     
@@ -226,15 +226,10 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       const updatedPlayers = [...state.players]
       updatedPlayers[playerIndex] = updatedPlayer
       
-      // Check if game should end (player reached 4 penalties)
-      const gameStatus = shouldGameEnd(state.lockedRows.length, updatedPlayers)
-        ? 'ended'
-        : 'playing'
-      
+      // Don't check game end here - wait until turn transition
       return {
         ...newState,
         players: updatedPlayers,
-        gameStatus,
       }
     }
     
@@ -253,6 +248,60 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       return {
         ...initialGameState,
         history: [action],
+      }
+    }
+    
+    case 'UNMARK_NUMBER': {
+      const { playerId, color, number } = action.payload
+      
+      if (state.gameStatus !== 'playing') {
+        return state
+      }
+      
+      // Find player and validate
+      const playerIndex = state.players.findIndex(p => p.id === playerId)
+      if (playerIndex === -1) {
+        console.error('Player not found.')
+        return state
+      }
+      
+      const player = state.players[playerIndex]
+      const row = player.scoreSheet[color]
+      
+      // Check if the number is actually marked
+      const numberEntry = row.numbers.find(n => n.number === number)
+      if (!numberEntry || !numberEntry.marked) {
+        console.error(`Number ${number} in ${color} row is not marked.`)
+        return state
+      }
+      
+      // Unmark the number
+      const updatedNumbers = row.numbers.map(n =>
+        n.number === number ? { ...n, marked: false } : n
+      )
+      
+      const updatedRow = {
+        ...row,
+        numbers: updatedNumbers,
+      }
+      
+      const updatedScoreSheet = {
+        ...player.scoreSheet,
+        [color]: updatedRow,
+      }
+      
+      const updatedPlayer = {
+        ...player,
+        scoreSheet: updatedScoreSheet,
+        totalScore: calculateTotalScore({ ...player, scoreSheet: updatedScoreSheet }),
+      }
+      
+      const updatedPlayers = [...state.players]
+      updatedPlayers[playerIndex] = updatedPlayer
+      
+      return {
+        ...newState,
+        players: updatedPlayers,
       }
     }
     

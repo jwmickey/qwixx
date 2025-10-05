@@ -70,11 +70,12 @@ export interface Player {
  * Action types for game state updates
  */
 export type GameAction =
-  | { type: 'INITIALIZE_GAME'; payload: { playerNames: string[] } }
+  | { type: 'INITIALIZE_GAME'; payload: { playerNames: string[]; playerIds?: string[] } }
   | { type: 'START_GAME' }
   | { type: 'NEXT_TURN' }
   | { type: 'ROLL_DICE'; payload: DiceState }
   | { type: 'MARK_NUMBER'; payload: { playerId: string; color: RowColor; number: number; allowLockedRow?: boolean } }
+  | { type: 'UNMARK_NUMBER'; payload: { playerId: string; color: RowColor; number: number } }
   | { type: 'LOCK_ROW'; payload: { color: RowColor } }
   | { type: 'ADD_PENALTY'; payload: { playerId: string } }
   | { type: 'END_GAME' }

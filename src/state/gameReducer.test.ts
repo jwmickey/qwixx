@@ -263,6 +263,12 @@ describe('gameReducer', () => {
         payload: { playerId, color: 'yellow', number: 12 },
       })
       
+      // Game should still be playing until turn transition
+      expect(state.gameStatus).toBe('playing')
+      expect(state.lockedRows).toHaveLength(2)
+      
+      // Game ends when turn is advanced
+      state = gameReducer(state, { type: 'NEXT_TURN' })
       expect(state.gameStatus).toBe('ended')
     })
   })
@@ -305,6 +311,12 @@ describe('gameReducer', () => {
       expect(state.gameStatus).toBe('playing')
       
       state = gameReducer(state, { type: 'LOCK_ROW', payload: { color: 'yellow' } })
+      // Game should still be playing until turn transition
+      expect(state.gameStatus).toBe('playing')
+      expect(state.lockedRows).toHaveLength(2)
+      
+      // Game ends when turn is advanced
+      state = gameReducer(state, { type: 'NEXT_TURN' })
       expect(state.gameStatus).toBe('ended')
     })
   })
@@ -367,6 +379,12 @@ describe('gameReducer', () => {
       }
       
       state = gameReducer(state, { type: 'ADD_PENALTY', payload: { playerId } })
+      // Game should still be playing until turn transition
+      expect(state.gameStatus).toBe('playing')
+      expect(state.players[0].penalties).toBe(4)
+      
+      // Game ends when turn is advanced
+      state = gameReducer(state, { type: 'NEXT_TURN' })
       expect(state.gameStatus).toBe('ended')
     })
   })
@@ -416,6 +434,76 @@ describe('gameReducer', () => {
       state = gameReducer(state, { type: 'START_GAME' })
       expect(state.history).toHaveLength(2)
       expect(state.history[1].type).toBe('START_GAME')
+    })
+  })
+
+  describe('UNMARK_NUMBER', () => {
+    it('should unmark a marked number', () => {
+      let state = gameReducer(initialGameState, {
+        type: 'INITIALIZE_GAME',
+        payload: { playerNames: ['Alice', 'Bob'] },
+      })
+      state = gameReducer(state, { type: 'START_GAME' })
+      
+      const playerId = state.players[0].id
+      state = gameReducer(state, {
+        type: 'MARK_NUMBER',
+        payload: { playerId, color: 'red', number: 5 },
+      })
+      
+      expect(state.players[0].scoreSheet.red.numbers[3].marked).toBe(true)
+      
+      // Unmark the number
+      state = gameReducer(state, {
+        type: 'UNMARK_NUMBER',
+        payload: { playerId, color: 'red', number: 5 },
+      })
+      
+      expect(state.players[0].scoreSheet.red.numbers[3].marked).toBe(false)
+    })
+
+    it('should not unmark a number that is not marked', () => {
+      let state = gameReducer(initialGameState, {
+        type: 'INITIALIZE_GAME',
+        payload: { playerNames: ['Alice', 'Bob'] },
+      })
+      state = gameReducer(state, { type: 'START_GAME' })
+      
+      const playerId = state.players[0].id
+      const beforeUnmark = state
+      
+      // Try to unmark a number that was never marked
+      state = gameReducer(state, {
+        type: 'UNMARK_NUMBER',
+        payload: { playerId, color: 'red', number: 5 },
+      })
+      
+      // State should remain unchanged (except for history)
+      expect(state.players).toEqual(beforeUnmark.players)
+    })
+
+    it('should update total score after unmarking', () => {
+      let state = gameReducer(initialGameState, {
+        type: 'INITIALIZE_GAME',
+        payload: { playerNames: ['Alice', 'Bob'] },
+      })
+      state = gameReducer(state, { type: 'START_GAME' })
+      
+      const playerId = state.players[0].id
+      state = gameReducer(state, {
+        type: 'MARK_NUMBER',
+        payload: { playerId, color: 'red', number: 5 },
+      })
+      
+      expect(state.players[0].totalScore).toBe(1)
+      
+      // Unmark the number
+      state = gameReducer(state, {
+        type: 'UNMARK_NUMBER',
+        payload: { playerId, color: 'red', number: 5 },
+      })
+      
+      expect(state.players[0].totalScore).toBe(0)
     })
   })
 })

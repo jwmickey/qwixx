@@ -17,6 +17,8 @@ export function GameBoard() {
   const [whiteDiceMarked, setWhiteDiceMarked] = useState(false)
   const [coloredDiceMarked, setColoredDiceMarked] = useState(false)
   const [playersWhoMarkedWhite, setPlayersWhoMarkedWhite] = useState<Set<string>>(new Set())
+  // Track marks made in the current phase for toggle functionality
+  const [currentPhaseMarks, setCurrentPhaseMarks] = useState<Map<string, { color: RowColor; number: number }>>(new Map())
 
   const currentPlayer = state.players[state.currentPlayerIndex]
 
@@ -27,6 +29,7 @@ export function GameBoard() {
       setWhiteDiceMarked(false)
       setColoredDiceMarked(false)
       setPlayersWhoMarkedWhite(new Set())
+      setCurrentPhaseMarks(new Map())
     }
   }, [state.dice, state.currentPlayerIndex])
 
@@ -40,8 +43,39 @@ export function GameBoard() {
     const isActivePlayer = playerId === currentPlayer.id
     const whiteDiceSum = state.dice ? state.dice.white1 + state.dice.white2 : 0
     const isWhiteDiceMark = number === whiteDiceSum
+    
+    // Check if this number was marked in the current phase (can be toggled)
+    const markKey = `${playerId}-${color}-${number}`
+    const wasMarkedThisPhase = currentPhaseMarks.has(markKey)
+    
+    // If already marked in this phase, unmark it (toggle)
+    if (wasMarkedThisPhase) {
+      dispatch({
+        type: 'UNMARK_NUMBER',
+        payload: { playerId, color, number },
+      })
+      
+      // Update tracking
+      const newMarks = new Map(currentPhaseMarks)
+      newMarks.delete(markKey)
+      setCurrentPhaseMarks(newMarks)
+      
+      if (turnPhase === 'white-dice' || turnPhase === 'inactive-players') {
+        setPlayersWhoMarkedWhite(prev => {
+          const newSet = new Set(prev)
+          newSet.delete(playerId)
+          return newSet
+        })
+        if (isActivePlayer && turnPhase === 'white-dice') {
+          setWhiteDiceMarked(false)
+        }
+      } else if (turnPhase === 'colored-dice' && isActivePlayer) {
+        setColoredDiceMarked(false)
+      }
+      return
+    }
 
-    // Validate marking rules
+    // Validate marking rules (same as before, but now marks can be toggled)
     if (turnPhase === 'white-dice') {
       // Check if player already marked white dice
       if (playersWhoMarkedWhite.has(playerId)) {
@@ -51,12 +85,12 @@ export function GameBoard() {
       
       if (isWhiteDiceMark) {
         // Mark white dice - allow marking even if row is globally locked
-        // (multiple players can lock the same row during white dice phase)
         dispatch({
           type: 'MARK_NUMBER',
           payload: { playerId, color, number, allowLockedRow: true },
         })
         setPlayersWhoMarkedWhite(prev => new Set(prev).add(playerId))
+        setCurrentPhaseMarks(prev => new Map(prev).set(markKey, { color, number }))
         if (isActivePlayer) {
           setWhiteDiceMarked(true)
         }
@@ -64,12 +98,19 @@ export function GameBoard() {
         console.error('Can only mark white dice sum in this phase')
         return
       }
-    } else if (turnPhase === 'colored-dice' && isActivePlayer && !coloredDiceMarked) {
+    } else if (turnPhase === 'colored-dice' && isActivePlayer) {
+      // Check if player already marked colored dice (and it's not the one they're trying to toggle)
+      if (coloredDiceMarked && !wasMarkedThisPhase) {
+        console.error('Active player already marked colored dice this turn')
+        return
+      }
+      
       // Active player can mark one colored dice combination
       dispatch({
         type: 'MARK_NUMBER',
         payload: { playerId, color, number },
       })
+      setCurrentPhaseMarks(prev => new Map(prev).set(markKey, { color, number }))
       setColoredDiceMarked(true)
     } else if (turnPhase === 'inactive-players' && !isActivePlayer) {
       // Inactive players can mark white dice - allow marking even if row is locked
@@ -79,6 +120,7 @@ export function GameBoard() {
           payload: { playerId, color, number, allowLockedRow: true },
         })
         setPlayersWhoMarkedWhite(prev => new Set(prev).add(playerId))
+        setCurrentPhaseMarks(prev => new Map(prev).set(markKey, { color, number }))
       }
     }
   }
@@ -90,6 +132,8 @@ export function GameBoard() {
   const handleFinishWhiteDicePhase = () => {
     if (turnPhase === 'white-dice') {
       setTurnPhase('colored-dice')
+      // Clear phase marks - white dice selections are now permanent
+      setCurrentPhaseMarks(new Map())
     }
   }
 
@@ -100,6 +144,8 @@ export function GameBoard() {
         handleAddPenalty(currentPlayer.id)
       }
       setTurnPhase('inactive-players')
+      // Clear phase marks - colored dice selection is now permanent
+      setCurrentPhaseMarks(new Map())
     }
   }
 
@@ -110,6 +156,18 @@ export function GameBoard() {
     setWhiteDiceMarked(false)
     setColoredDiceMarked(false)
     setPlayersWhoMarkedWhite(new Set())
+    setCurrentPhaseMarks(new Map())
+  }
+
+  const handleRestart = () => {
+    if (confirm('Are you sure you want to restart the game? All progress will be lost.')) {
+      dispatch({ type: 'RESET_GAME' })
+      setTurnPhase('rolling')
+      setWhiteDiceMarked(false)
+      setColoredDiceMarked(false)
+      setPlayersWhoMarkedWhite(new Set())
+      setCurrentPhaseMarks(new Map())
+    }
   }
 
   // Can only roll if dice haven't been rolled yet this turn
@@ -200,6 +258,18 @@ export function GameBoard() {
               </button>
             )}
           </div>
+          
+          {/* Secondary actions */}
+          <div className="flex justify-end mb-3">
+            <button
+              onClick={handleRestart}
+              className="text-sm text-gray-500 hover:text-gray-700 underline"
+              title="Restart game"
+            >
+              Restart Game
+            </button>
+          </div>
+
           <p className="text-sm text-gray-600">
             {turnPhase === 'rolling' && 'Roll the dice to see your options'}
             {turnPhase === 'white-dice' && 'All players: Mark the white dice sum (optional), then click Finish'}
