@@ -98,7 +98,13 @@ export function GameBoard() {
         console.error('Can only mark white dice sum in this phase')
         return
       }
-    } else if (turnPhase === 'colored-dice' && isActivePlayer && !coloredDiceMarked) {
+    } else if (turnPhase === 'colored-dice' && isActivePlayer) {
+      // Check if player already marked colored dice (and it's not the one they're trying to toggle)
+      if (coloredDiceMarked && !wasMarkedThisPhase) {
+        console.error('Active player already marked colored dice this turn')
+        return
+      }
+      
       // Active player can mark one colored dice combination
       dispatch({
         type: 'MARK_NUMBER',

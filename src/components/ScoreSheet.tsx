@@ -51,7 +51,8 @@ function ColorRow({
         <div className="flex gap-1 flex-1 overflow-x-auto">
           {row.numbers.map((num, index) => {
             const isValid = validNumbers.has(num.number)
-            const isClickable = canInteract && !row.locked && isValid
+            // Allow clicking if valid OR if already marked (for toggle/unmark)
+            const isClickable = canInteract && !row.locked && (isValid || num.marked)
             
             // Check if this position is blocked because something to the right is marked
             const isBlocked = !num.marked && row.numbers.slice(index + 1).some(n => n.marked)
@@ -63,7 +64,7 @@ function ColorRow({
                 disabled={!isClickable}
                 className={`w-8 h-8 rounded border-2 text-sm font-semibold flex-shrink-0 transition-all duration-200 relative ${
                   num.marked
-                    ? `${colors.bg} ${colors.text} ${colors.border} scale-105`
+                    ? `${colors.bg} ${colors.text} ${colors.border} scale-105 cursor-pointer hover:opacity-80`
                     : isBlocked
                     ? 'bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed line-through'
                     : isValid && canInteract && !row.locked
