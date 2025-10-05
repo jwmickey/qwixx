@@ -224,12 +224,7 @@ export function GameBoard() {
 
   return (
     <div className="min-h-screen bg-gray-100 p-4">
-      <div className="max-w-4xl mx-auto space-y-4">
-        {/* Game title */}
-        <div className="bg-white rounded-lg shadow p-4 text-center">
-          <h1 className="text-2xl font-bold text-gray-900">Qwixx</h1>
-        </div>
-
+      <div className="max-w-4xl mx-auto space-y-3">
         {/* Game controls */}
         <div className="bg-white rounded-lg shadow p-4">
           <h3 className="text-xl font-semibold mb-3">{currentPlayer.name}'s Turn</h3>
@@ -292,7 +287,7 @@ export function GameBoard() {
         <DiceDisplay dice={state.dice} lockedRows={state.lockedRows} />
 
         {/* Score sheets */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           {state.players.map((player) => (
             <ScoreSheet
               key={player.id}
