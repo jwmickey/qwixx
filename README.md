@@ -93,9 +93,15 @@ This project aims to create a digital version of Qwixx that allows 2-5 players t
 - Interactive score sheets for each player
 - Automatic score calculation
 - Turn management system
-- Game state persistence
+- Game state persistence with auto-save
 - Undo functionality for accidental marks
-- Game history and statistics
+- Progressive Web App (PWA) support
+  - Install to home screen
+  - Offline play capability
+  - Service worker caching
+- Mobile-optimized layout
+- Help modal and tutorial system
+- Accessibility features (ARIA labels, keyboard navigation)
 
 ### Technology Stack
 
@@ -138,8 +144,30 @@ The application will be available at `http://localhost:5173/`
 - `npm run build` - Build the project for production
 - `npm run preview` - Preview the production build
 - `npm run lint` - Run ESLint to check code quality
+- `npm run format` - Format code with Prettier
+- `npm run format:check` - Check code formatting
 - `npm test` - Run tests in watch mode
 - `npm run test:ui` - Run tests with Vitest UI
+
+### PWA Installation
+
+The app can be installed as a Progressive Web App:
+
+1. Visit the app in a supported browser (Chrome, Edge, Safari)
+2. Click the install prompt that appears, or
+3. Use the browser's "Install App" option from the menu
+4. The app will be added to your home screen and can be used offline
+
+### Current Status
+
+- ✅ Phase 1-5 Complete
+- ✅ 104 tests passing
+- ✅ Full game functionality
+- ✅ PWA support with offline play
+- ✅ Mobile-optimized layout
+- ✅ Production ready
+
+See [ROADMAP.md](ROADMAP.md) for detailed development progress.
 
 ## Contributing
 
