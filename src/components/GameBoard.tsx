@@ -7,7 +7,8 @@ import { useGame } from '../state'
 import { DiceDisplay } from './DiceDisplay'
 import { HelpModal } from './HelpModal'
 import { ScoreSheet } from './ScoreSheet'
-import { rollAllDice, getActivePlayerCombinations } from '../utils/diceHelpers'
+import { rollAllDice } from '../utils/diceHelpers'
+import { getValidNumbersForColor } from '../utils/coloredDiceHelpers'
 import type { RowColor } from '../types/game'
 
 type TurnPhase = 'rolling' | 'white-dice' | 'colored-dice' | 'inactive-players'
@@ -195,31 +196,52 @@ export function GameBoard() {
   }
 
   // Get valid numbers for each player based on dice and turn phase
-  const getValidNumbers = (playerId: string): Set<number> => {
-    if (!state.dice) return new Set()
+  const getValidNumbers = (playerId: string): Map<RowColor, Set<number>> => {
+    const emptyMap = new Map<RowColor, Set<number>>([
+      ['red', new Set()],
+      ['yellow', new Set()],
+      ['green', new Set()],
+      ['blue', new Set()],
+    ])
+    
+    if (!state.dice) return emptyMap
 
     const isActivePlayer = playerId === currentPlayer.id
     const whiteDiceSum = state.dice.white1 + state.dice.white2
 
     if (turnPhase === 'white-dice') {
-      // All players can see white dice sum
-      return new Set([whiteDiceSum])
+      // All players can see white dice sum for all colors
+      return new Map<RowColor, Set<number>>([
+        ['red', new Set([whiteDiceSum])],
+        ['yellow', new Set([whiteDiceSum])],
+        ['green', new Set([whiteDiceSum])],
+        ['blue', new Set([whiteDiceSum])],
+      ])
     } else if (turnPhase === 'colored-dice') {
       if (isActivePlayer && !coloredDiceMarked) {
-        // Active player can use colored dice combinations
-        const combinations = getActivePlayerCombinations(state.dice, state.lockedRows)
-        return new Set(combinations.filter(c => c.color !== null).map(c => c.sum))
+        // Active player can use colored dice combinations - color-specific
+        return new Map<RowColor, Set<number>>([
+          ['red', getValidNumbersForColor(state.dice, 'red', state.lockedRows)],
+          ['yellow', getValidNumbersForColor(state.dice, 'yellow', state.lockedRows)],
+          ['green', getValidNumbersForColor(state.dice, 'green', state.lockedRows)],
+          ['blue', getValidNumbersForColor(state.dice, 'blue', state.lockedRows)],
+        ])
       }
-      return new Set()
+      return emptyMap
     } else if (turnPhase === 'inactive-players') {
       if (!isActivePlayer && !playersWhoMarkedWhite.has(playerId)) {
         // Inactive players can mark white dice
-        return new Set([whiteDiceSum])
+        return new Map<RowColor, Set<number>>([
+          ['red', new Set([whiteDiceSum])],
+          ['yellow', new Set([whiteDiceSum])],
+          ['green', new Set([whiteDiceSum])],
+          ['blue', new Set([whiteDiceSum])],
+        ])
       }
-      return new Set()
+      return emptyMap
     }
 
-    return new Set()
+    return emptyMap
   }
 
   return (
