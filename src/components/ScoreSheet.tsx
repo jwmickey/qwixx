@@ -11,7 +11,7 @@ interface ScoreSheetProps {
   onMarkNumber: (color: RowColor, number: number) => void
   onAddPenalty: () => void
   canInteract: boolean
-  validNumbers: Set<number>
+  validNumbers: Map<RowColor, Set<number>>
 }
 
 const ROW_COLORS: Record<RowColor, { bg: string; text: string; border: string }> = {
@@ -125,28 +125,28 @@ export function ScoreSheet({ player, isActive, onMarkNumber, onAddPenalty, canIn
         row={player.scoreSheet.red}
         onMarkNumber={(num) => onMarkNumber('red', num)}
         canInteract={canInteract}
-        validNumbers={validNumbers}
+        validNumbers={validNumbers.get('red') || new Set()}
       />
       <ColorRow
         color="yellow"
         row={player.scoreSheet.yellow}
         onMarkNumber={(num) => onMarkNumber('yellow', num)}
         canInteract={canInteract}
-        validNumbers={validNumbers}
+        validNumbers={validNumbers.get('yellow') || new Set()}
       />
       <ColorRow
         color="green"
         row={player.scoreSheet.green}
         onMarkNumber={(num) => onMarkNumber('green', num)}
         canInteract={canInteract}
-        validNumbers={validNumbers}
+        validNumbers={validNumbers.get('green') || new Set()}
       />
       <ColorRow
         color="blue"
         row={player.scoreSheet.blue}
         onMarkNumber={(num) => onMarkNumber('blue', num)}
         canInteract={canInteract}
-        validNumbers={validNumbers}
+        validNumbers={validNumbers.get('blue') || new Set()}
       />
 
       {/* Penalties */}
