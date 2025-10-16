@@ -195,31 +195,96 @@ export function GameBoard() {
   }
 
   // Get valid numbers for each player based on dice and turn phase
-  const getValidNumbers = (playerId: string): Set<number> => {
-    if (!state.dice) return new Set()
+  // Returns a map of RowColor -> Set<number> so each color row can be validated independently
+  // Also returns a map of RowColor -> Map<number, Set<1|2>> to indicate which white die(s) produce that sum
+  const getValidNumbersByColor = (
+    playerId: string
+  ): { numbersByColor: Record<RowColor, Set<number>>; sourcesByColor: Record<RowColor, Map<number, Set<1 | 2>>> } => {
+    const empty: Record<RowColor, Set<number>> = {
+      red: new Set<number>(),
+      yellow: new Set<number>(),
+      green: new Set<number>(),
+      blue: new Set<number>(),
+    }
+    if (!state.dice) {
+      return { numbersByColor: empty, sourcesByColor: { red: new Map(), yellow: new Map(), green: new Map(), blue: new Map() } }
+    }
 
     const isActivePlayer = playerId === currentPlayer.id
     const whiteDiceSum = state.dice.white1 + state.dice.white2
 
-    if (turnPhase === 'white-dice') {
-      // All players can see white dice sum
-      return new Set([whiteDiceSum])
-    } else if (turnPhase === 'colored-dice') {
-      if (isActivePlayer && !coloredDiceMarked) {
-        // Active player can use colored dice combinations
-        const combinations = getActivePlayerCombinations(state.dice, state.lockedRows)
-        return new Set(combinations.filter(c => c.color !== null).map(c => c.sum))
-      }
-      return new Set()
-    } else if (turnPhase === 'inactive-players') {
-      if (!isActivePlayer && !playersWhoMarkedWhite.has(playerId)) {
-        // Inactive players can mark white dice
-        return new Set([whiteDiceSum])
-      }
-      return new Set()
+    const emptySources: Record<RowColor, Map<number, Set<1 | 2>>> = {
+      red: new Map(),
+      yellow: new Map(),
+      green: new Map(),
+      blue: new Map(),
     }
 
-    return new Set()
+    if (turnPhase === 'white-dice') {
+      // All players can mark the white dice sum on any row (white-dice marks are treated as global sum)
+      const numbers = {
+        red: new Set([whiteDiceSum]),
+        yellow: new Set([whiteDiceSum]),
+        green: new Set([whiteDiceSum]),
+        blue: new Set([whiteDiceSum]),
+      }
+      // For white-dice phase, indicate both white dice as sources (W1 and W2) for informational purposes
+      for (const color of ['red', 'yellow', 'green', 'blue'] as RowColor[]) {
+        emptySources[color].set(whiteDiceSum, new Set([1, 2]))
+      }
+
+      return { numbersByColor: numbers, sourcesByColor: emptySources }
+    }
+
+    if (turnPhase === 'colored-dice') {
+      if (isActivePlayer && !coloredDiceMarked) {
+        // Active player: compute combinations per color and also track which white die(s) produced each sum
+        const combinations = getActivePlayerCombinations(state.dice, state.lockedRows)
+        const map: Record<RowColor, Set<number>> = {
+          red: new Set<number>(),
+          yellow: new Set<number>(),
+          green: new Set<number>(),
+          blue: new Set<number>(),
+        }
+        const sources: Record<RowColor, Map<number, Set<1 | 2>>> = {
+          red: new Map(),
+          yellow: new Map(),
+          green: new Map(),
+          blue: new Map(),
+        }
+
+        for (const c of combinations) {
+          if (c.color === null) continue // skip white-only entry here
+          map[c.color].add(c.sum)
+          const current = sources[c.color].get(c.sum) ?? new Set<1 | 2>()
+          if (c.whiteDie === 1 || c.whiteDie === 2) current.add(c.whiteDie)
+          sources[c.color].set(c.sum, current)
+        }
+
+        return { numbersByColor: map, sourcesByColor: sources }
+      }
+      // Active player who already marked, or other players: no colored picks
+      return { numbersByColor: empty, sourcesByColor: emptySources }
+    }
+
+    if (turnPhase === 'inactive-players') {
+      if (!isActivePlayer && !playersWhoMarkedWhite.has(playerId)) {
+        // Inactive players can mark the white dice sum
+        const numbers = {
+          red: new Set([whiteDiceSum]),
+          yellow: new Set([whiteDiceSum]),
+          green: new Set([whiteDiceSum]),
+          blue: new Set([whiteDiceSum]),
+        }
+        for (const color of ['red', 'yellow', 'green', 'blue'] as RowColor[]) {
+          emptySources[color].set(whiteDiceSum, new Set([1, 2]))
+        }
+        return { numbersByColor: numbers, sourcesByColor: emptySources }
+      }
+      return { numbersByColor: empty, sourcesByColor: emptySources }
+    }
+
+    return { numbersByColor: empty, sourcesByColor: emptySources }
   }
 
   return (
@@ -288,17 +353,21 @@ export function GameBoard() {
 
         {/* Score sheets */}
         <div className="space-y-3">
-          {state.players.map((player) => (
-            <ScoreSheet
-              key={player.id}
-              player={player}
-              isActive={player.id === currentPlayer.id}
-              onMarkNumber={(color, number) => handleMarkNumber(player.id, color, number)}
-              onAddPenalty={() => handleAddPenalty(player.id)}
-              canInteract={turnPhase !== 'rolling'}
-              validNumbers={getValidNumbers(player.id)}
-            />
-          ))}
+          {state.players.map((player) => {
+            const { numbersByColor, sourcesByColor } = getValidNumbersByColor(player.id)
+            return (
+              <ScoreSheet
+                key={player.id}
+                player={player}
+                isActive={player.id === currentPlayer.id}
+                onMarkNumber={(color, number) => handleMarkNumber(player.id, color, number)}
+                onAddPenalty={() => handleAddPenalty(player.id)}
+                canInteract={turnPhase !== 'rolling'}
+                validNumbersByColor={numbersByColor}
+                validSourcesByColor={sourcesByColor}
+              />
+            )
+          })}
         </div>
       </div>
 

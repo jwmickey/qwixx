@@ -11,7 +11,10 @@ interface ScoreSheetProps {
   onMarkNumber: (color: RowColor, number: number) => void
   onAddPenalty: () => void
   canInteract: boolean
-  validNumbers: Set<number>
+  // valid numbers are provided per color so colored rows only enable their own combinations
+  validNumbersByColor: Record<RowColor, Set<number>>
+  // Map of color -> (sum -> set of white die indices (1 or 2)) used to render a small UI hint
+  validSourcesByColor?: Record<RowColor, Map<number, Set<1 | 2>>>
 }
 
 const ROW_COLORS: Record<RowColor, { bg: string; text: string; border: string }> = {
@@ -27,12 +30,14 @@ function ColorRow({
   onMarkNumber,
   canInteract,
   validNumbers,
+  sources,
 }: {
   color: RowColor
   row: Player['scoreSheet'][RowColor]
   onMarkNumber: (number: number) => void
   canInteract: boolean
   validNumbers: Set<number>
+  sources?: Map<number, Set<1 | 2>>
 }) {
   const colors = ROW_COLORS[color]
   const rowScore = calculateRowScore(row)
@@ -54,6 +59,7 @@ function ColorRow({
         <div className="flex gap-1 flex-1 overflow-x-auto" role="group" aria-label={`${color} row numbers`}>
           {row.numbers.map((num, index) => {
             const isValid = validNumbers.has(num.number)
+            const sourceSet = sources?.get(num.number)
             // Allow clicking if valid OR if already marked (for toggle/unmark)
             const isClickable = canInteract && !row.locked && (isValid || num.marked)
             
@@ -61,6 +67,7 @@ function ColorRow({
             const isBlocked = !num.marked && row.numbers.slice(index + 1).some(n => n.marked)
             
             return (
+              <div className="relative" key={num.number}>
               <button
                 key={num.number}
                 onClick={() => isClickable && onMarkNumber(num.number)}
@@ -80,6 +87,15 @@ function ColorRow({
               >
                 {num.number}
               </button>
+              {/* Small badge showing which white die(s) produce this sum when it's valid */}
+              {isValid && sourceSet && (
+                <div className="absolute -top-2 -right-2 bg-white border rounded px-1 text-xs font-semibold text-gray-700 flex gap-0.5 items-center" title={`Produced by white die(s): ${[...sourceSet].map(s => `W${s}`).join(', ')}`}>
+                  {[...sourceSet].sort().map(s => (
+                    <span key={s} className="text-[10px] leading-none">{`W${s}`}</span>
+                  ))}
+                </div>
+              )}
+              </div>
             )
           })}
         </div>
@@ -100,7 +116,7 @@ function ColorRow({
   )
 }
 
-export function ScoreSheet({ player, isActive, onMarkNumber, onAddPenalty, canInteract, validNumbers }: ScoreSheetProps) {
+export function ScoreSheet({ player, isActive, onMarkNumber, onAddPenalty, canInteract, validNumbersByColor }: ScoreSheetProps) {
   return (
     <div 
       className={`bg-white rounded-lg shadow p-4 ${isActive ? 'ring-2 ring-blue-500' : ''}`}
@@ -125,28 +141,28 @@ export function ScoreSheet({ player, isActive, onMarkNumber, onAddPenalty, canIn
         row={player.scoreSheet.red}
         onMarkNumber={(num) => onMarkNumber('red', num)}
         canInteract={canInteract}
-        validNumbers={validNumbers}
+        validNumbers={validNumbersByColor.red}
       />
       <ColorRow
         color="yellow"
         row={player.scoreSheet.yellow}
         onMarkNumber={(num) => onMarkNumber('yellow', num)}
         canInteract={canInteract}
-        validNumbers={validNumbers}
+        validNumbers={validNumbersByColor.yellow}
       />
       <ColorRow
         color="green"
         row={player.scoreSheet.green}
         onMarkNumber={(num) => onMarkNumber('green', num)}
         canInteract={canInteract}
-        validNumbers={validNumbers}
+        validNumbers={validNumbersByColor.green}
       />
       <ColorRow
         color="blue"
         row={player.scoreSheet.blue}
         onMarkNumber={(num) => onMarkNumber('blue', num)}
         canInteract={canInteract}
-        validNumbers={validNumbers}
+        validNumbers={validNumbersByColor.blue}
       />
 
       {/* Penalties */}

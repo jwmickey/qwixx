@@ -78,21 +78,21 @@ describe('diceHelpers', () => {
       // White dice sum
       expect(combinations).toContainEqual({ color: null, sum: 5 })
       
-      // Red combinations
-      expect(combinations).toContainEqual({ color: 'red', sum: 6 }) // white1 + red
-      expect(combinations).toContainEqual({ color: 'red', sum: 7 }) // white2 + red
+  // Red combinations (include whiteDie source)
+  expect(combinations).toContainEqual({ color: 'red', sum: 6, whiteDie: 1 }) // white1 + red
+  expect(combinations).toContainEqual({ color: 'red', sum: 7, whiteDie: 2 }) // white2 + red
       
-      // Yellow combinations
-      expect(combinations).toContainEqual({ color: 'yellow', sum: 7 }) // white1 + yellow
-      expect(combinations).toContainEqual({ color: 'yellow', sum: 8 }) // white2 + yellow
+  // Yellow combinations
+  expect(combinations).toContainEqual({ color: 'yellow', sum: 7, whiteDie: 1 }) // white1 + yellow
+  expect(combinations).toContainEqual({ color: 'yellow', sum: 8, whiteDie: 2 }) // white2 + yellow
       
-      // Green combinations
-      expect(combinations).toContainEqual({ color: 'green', sum: 8 }) // white1 + green
-      expect(combinations).toContainEqual({ color: 'green', sum: 9 }) // white2 + green
+  // Green combinations
+  expect(combinations).toContainEqual({ color: 'green', sum: 8, whiteDie: 1 }) // white1 + green
+  expect(combinations).toContainEqual({ color: 'green', sum: 9, whiteDie: 2 }) // white2 + green
       
-      // Blue combinations
-      expect(combinations).toContainEqual({ color: 'blue', sum: 3 }) // white1 + blue
-      expect(combinations).toContainEqual({ color: 'blue', sum: 4 }) // white2 + blue
+  // Blue combinations
+  expect(combinations).toContainEqual({ color: 'blue', sum: 3, whiteDie: 1 }) // white1 + blue
+  expect(combinations).toContainEqual({ color: 'blue', sum: 4, whiteDie: 2 }) // white2 + blue
     })
     
     it('should exclude locked rows from combinations', () => {
@@ -135,6 +135,31 @@ describe('diceHelpers', () => {
       const redCombinations = combinations.filter(c => c.color === 'red')
       expect(redCombinations.length).toBe(1)
       expect(redCombinations[0].sum).toBe(7)
+    })
+
+    it('example scenario: white dice 4 & 5, red 1, yellow 6 produces correct sums and sources', () => {
+      const dice = {
+        white1: 4,
+        white2: 5,
+        red: 1,
+        yellow: 6,
+        green: 2,
+        blue: 3,
+      }
+
+      const combinations = getActivePlayerCombinations(dice, [])
+
+      // Find red combinations and their whiteDie sources
+      const redCombs = combinations.filter(c => c.color === 'red')
+      expect(redCombs.map(c => c.sum).sort()).toEqual([5, 6]) // 4+1, 5+1
+      expect(redCombs.find(c => c.sum === 5)?.whiteDie).toBe(1)
+      expect(redCombs.find(c => c.sum === 6)?.whiteDie).toBe(2)
+
+      // Find yellow combinations
+      const yellowCombs = combinations.filter(c => c.color === 'yellow')
+      expect(yellowCombs.map(c => c.sum).sort()).toEqual([10, 11]) // 4+6, 5+6
+      expect(yellowCombs.find(c => c.sum === 10)?.whiteDie).toBe(1)
+      expect(yellowCombs.find(c => c.sum === 11)?.whiteDie).toBe(2)
     })
   })
   

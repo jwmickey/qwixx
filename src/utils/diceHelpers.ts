@@ -46,8 +46,8 @@ export function getWhiteDiceSum(dice: DiceState): number {
 export function getActivePlayerCombinations(
   dice: DiceState,
   lockedRows: RowColor[]
-): Array<{ color: RowColor | null; sum: number }> {
-  const combinations: Array<{ color: RowColor | null; sum: number }> = []
+): Array<{ color: RowColor | null; sum: number; whiteDie?: 1 | 2 }> {
+  const combinations: Array<{ color: RowColor | null; sum: number; whiteDie?: 1 | 2 }> = []
   
   // White dice sum is always available (for all players)
   combinations.push({ color: null, sum: getWhiteDiceSum(dice) })
@@ -62,12 +62,12 @@ export function getActivePlayerCombinations(
     }
     
     // Add white1 + colored die
-    combinations.push({ color, sum: dice.white1 + dice[color] })
+    combinations.push({ color, sum: dice.white1 + dice[color], whiteDie: 1 })
     
     // Add white2 + colored die (only if different from white1 combination)
     const white2Sum = dice.white2 + dice[color]
     if (white2Sum !== dice.white1 + dice[color]) {
-      combinations.push({ color, sum: white2Sum })
+      combinations.push({ color, sum: white2Sum, whiteDie: 2 })
     }
   }
   
