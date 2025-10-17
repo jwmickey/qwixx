@@ -1,0 +1,4 @@
+{
+  "testMatch": "**/*.spec.ts",
+  "testIgnore": ["**/node_modules/**"]
+}
